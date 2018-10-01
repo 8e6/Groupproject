@@ -1,14 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>{{ title }} | Project Dream Team</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='images/group-icon.png') }}">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-default navbar-fixed-top topnav" role="navigation">
+{% extends "bootstrap/base.html" %}
+{% block title %}{{ title }} | Project Dream Team{% endblock %}
+{% import "bootstrap/fixes.html" as fixes %}
+
+{% block head %}
+    {{super()}}
+    {{fixes.ie8()}}
+{% endblock %}
+
+{% block styles %}
+    {{super()}}
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/style.css')}}">
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-expand-lg navbar-default navbar-fixed-top topnav" role="navigation">
+        <div id="logo">
+              <a class="navbar-brand topnav" href="{{ url_for('home.homepage') }}"><img src="{{url_for('static', filename='images/imgLogo50.gif')}}"></a>
+        </div>
         <div class="container topnav">
           <div class="navbar-header">
               <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -17,16 +25,32 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand topnav" href="{{ url_for('home.homepage') }}">Project Dream Team</a>
           </div>
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
+            <ul class="nav navbar-nav navbar-left">
                 {% if current_user.is_authenticated %}
                   {% if current_user.is_admin %}
-                    <li><a href="{{ url_for('home.admin_dashboard') }}">Dashboard</a></li>
-                    <li><a href="{{ url_for('admin.list_companies') }}">Companies</a></li>
-                    <li><a href="{{ url_for('admin.list_programmes') }}">Programmes</a></li>
-                    <li><a href="{{ url_for('admin.list_users') }}">Users</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('home.admin_dashboard') }}">Dashboard</a></li>
+                      <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Data maintenance
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                          <a class="dropdown-item" href="{{ url_for('admin.list_academic_years') }}">Academic years</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_companies') }}">Companies</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_domains') }}">Domains</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_faqs') }}">FAQs</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_flags') }}">Flags</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_programmes') }}">Programmes</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_projects') }}">Projects</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_skills') }}">Skills</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_statuses') }}">Statuses</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_teams') }}">Teams</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_transitions') }}">Transitions</a>
+                          <a class="dropdown-item" href="{{ url_for('admin.list_users') }}">Users</a>
+                        </div>
+                      </li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.update_settings') }}">Settings</a></li>
                   {% else %}
                     <li><a href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
                   {% endif %}
@@ -40,11 +64,9 @@
           </div>
         </div>
     </nav>
-    <div class="wrapper">
-      {% block body %}
-      {% endblock %}
-      <div class="push"></div>
-    </div>
+{% endblock navbar %}
+
+{% block footer %}
     <footer>
         <div class="container">
             <div class="row">
@@ -65,5 +87,6 @@
             </div>
         </div>
     </footer>
-</body>
-</html>
+{% endblock footer %}
+
+

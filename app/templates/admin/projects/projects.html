@@ -1,0 +1,98 @@
+{% import "bootstrap/utils.html" as utils %}
+{% extends "base.html" %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+<div class="content-section">
+  <div class="outer">
+    <div class="middle">
+      <div class="inner">
+        <br/>
+        {{ utils.flashed_messages() }}
+        <br/>
+        <h1 style="text-align:center;">Projects</h1>
+        {% if projects %}
+          <hr class="intro-divider">
+          <div class="center">
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th width="15%"> Title </th>
+                  <th width="15%"> Client </th>
+                  <th width="15%"> Overview </th>
+                  <th width="15%"> Deliverables </th>
+                  <th width="15%"> Resources </th>
+                  <th width="15%"> Skills required </th>
+                  <th width="15%"> Academic year </th>
+                  <th width="15%"> Status </th>
+                  <th width="15%"> Created </th>
+                  <th width="15%"> Updated </th>
+                  <th width="15%"> Notes of interest </th>
+                  <th width="15%"> Flags </th>
+                  <th width="15%"> Edit </th>
+                  <th width="15%"> Delete </th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for project in projects %}
+                <tr>
+                  <td> {{ project.title }} </td>
+                  <td> {{ project.client.company.name }} </td>
+                  <td> {{ project.overview }} </td>
+                  <td> {{ project.deliverables }} </td>
+                  <td> {{ project.resources }} </td>
+                  <td> {% for skill in project.skills_required %}
+                      {{ skill.skill_required.name }}<br/>
+                      {%  endfor %}
+                  </td>
+                  <td> {{ project.academic_year }} </td>
+                  <td> {{ project.status.name }} </td>
+                  <td> {{ project.created_date }} </td>
+                  <td> {{ project.updated_date }} </td>
+                  <td>
+                    {% if project.notes_of_interest %}
+                      {{ project.notes_of_interest|length }}
+                    {% else %}
+                      0
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if project.flags %}
+                      {{ project.flags|length }}
+                    {% else %}
+                      0
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('admin.edit_project', id=project.id) }}">
+                      <i class="fa fa-pencil"></i> Edit 
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{{ url_for('admin.delete_project', id=project.id) }}">
+                      <i class="fa fa-trash"></i> Delete 
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div style="text-align: center">
+        {% else %}
+          <div style="text-align: center">
+            <h3> No projects have been added. </h3>
+            <hr class="intro-divider">
+        {% endif %}
+          <a href="{{ url_for('admin.add_project') }}" class="btn btn-default btn-lg">
+            <i class="fa fa-plus"></i>
+            Add Project
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+    {% block footer %}
+        {{  super() }}
+    {% endblock footer%}
+</div>
+{% endblock %}

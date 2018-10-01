@@ -1,0 +1,39 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+{% block title %}
+    {% if add_project %}
+        Add Project
+    {% else %}
+        Edit Project
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {{  super() }}
+    <div class="content-section">
+     <div class="outer">
+        <div class="middle">
+          <div class="inner">
+            <div class="center">
+                {% if add_project %}
+                    <h1>Add Project</h1>
+                {% else %}
+                    <h1>Edit Project</h1>
+                {% endif %}
+                <br/>
+                {{ wtf.quick_form(form) }}
+                {%  if not add_project %}
+                    <div id="date_info">
+                    Created: {{ project.created_date }}<br/>
+                    Last updated: {{ project.updated_date }}
+                    </div>
+                {%  endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% block footer %}
+        {{  super() }}
+    {% endblock footer%}
+    </div>
+{% endblock content%}

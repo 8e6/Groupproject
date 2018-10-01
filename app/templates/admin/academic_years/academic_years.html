@@ -1,7 +1,8 @@
 {% import "bootstrap/utils.html" as utils %}
 {% extends "base.html" %}
-{% block title %}Programmes{% endblock %}
+{% block title %}Academic Years{% endblock %}
 {% block content %}
+
 <div class="content-section">
   <div class="outer">
     <div class="middle">
@@ -9,40 +10,42 @@
         <br/>
         {{ utils.flashed_messages() }}
         <br/>
-        <h1 style="text-align:center;">Programmes</h1>
-        {% if programmes %}
+        <h1 style="text-align:center;">Academic Years</h1>
+        {% if academic_years %}
           <hr class="intro-divider">
           <div class="center">
             <table class="table table-striped table-bordered">
               <thead>
                 <tr>
-                  <th width="15%"> Code </th>
-                  <th width="40%"> Title </th>
-                  <th width="15%"> Student Count </th>
+                  <th width="15%"> Year </th>
+                  <th width="40%"> Start date </th>
+                  <th width="40%"> End date </th>
+                  <th width="15%"> Project Count </th>
                   <th width="15%"> Edit </th>
                   <th width="15%"> Delete </th>
                 </tr>
               </thead>
               <tbody>
-              {% for programme in programmes %}
+              {% for academic_year in academic_years %}
                 <tr>
-                  <td> {{ programme.code }} </td>
-                  <td> {{ programme.title }} </td>
+                  <td> {{ academic_year.year }} </td>
+                  <td> {{ academic_year.start_date }} </td>
+                  <td> {{ academic_year.end_date }} </td>
                   <td>
-                    {% if programme.students %}
-                      {{ programme.students|length }}
+                    {% if academic_year.projects %}
+                      {{ academic_year.projects|length }}
                     {% else %}
                       0
                     {% endif %}
                   </td>
                   <td>
-                    <a href="{{ url_for('admin.edit_programme', code=programme.code) }}">
-                      <i class="fa fa-pencil"></i> Edit 
+                    <a href="{{ url_for('admin.edit_academic_year', year=academic_year.year) }}">
+                      <i class="fa fa-pencil"></i> Edit
                     </a>
                   </td>
                   <td>
-                    <a href="{{ url_for('admin.delete_programme', code=programme.code) }}">
-                      <i class="fa fa-trash"></i> Delete 
+                    <a href="{{ url_for('admin.delete_academic_year', year=academic_year.year) }}">
+                      <i class="fa fa-trash"></i> Delete
                     </a>
                   </td>
                 </tr>
@@ -53,12 +56,12 @@
           <div style="text-align: center">
         {% else %}
           <div style="text-align: center">
-            <h3> No programmes have been added. </h3>
+            <h3> No academic years have been added. </h3>
             <hr class="intro-divider">
         {% endif %}
-          <a href="{{ url_for('admin.add_programme') }}" class="btn btn-default btn-lg">
+          <a href="{{ url_for('admin.add_academic_year') }}" class="btn btn-default btn-lg">
             <i class="fa fa-plus"></i>
-            Add Programme
+            Add Academic Year
           </a>
         </div>
       </div>

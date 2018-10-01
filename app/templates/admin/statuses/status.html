@@ -1,20 +1,23 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
-{% block title %}Assign User{% endblock %}
+{% block title %}
+    {% if add_status %}
+        Add Status
+    {% else %}
+        Edit Status
+    {% endif %}
+{% endblock %}
 {% block content %}
 <div class="content-section">
  <div class="outer">
     <div class="middle">
       <div class="inner">
         <div class="center">
-            <h1> Assign Programmes and Companies </h1>
-            <br/>
-            <p>
-                Select a programme or company to assign to
-                <span style="color: #aec251;">
-                    {{ user.first_name }} {{ user.last_name }}
-                </span>
-            </p>
+            {% if add_status %}
+                <h1>Add Status</h1>
+            {% else %}
+                <h1>Edit Status</h1>
+            {% endif %}
             <br/>
             {{ wtf.quick_form(form) }}
         </div>
