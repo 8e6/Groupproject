@@ -119,10 +119,10 @@ class Project(db.Model):
     deliverables = db.Column(db.Text)
     resources = db.Column(db.Text)
     status_id = db.Column(db.Integer, db.ForeignKey('status.id'), nullable=False, index=True)
-    flags = db.relationship('Flag', backref='project', lazy='joined')
-    notes_of_interest = db.relationship('Interest', backref='project', lazy='joined')
+    flags = db.relationship('Flag', backref='project', lazy='joined', cascade="all, delete", passive_deletes=True)
+    notes_of_interest = db.relationship('Interest', backref='project', lazy='joined', cascade="all, delete", passive_deletes=True)
     skills_required = db.relationship('SkillRequired', backref='project', lazy='joined', cascade="all, delete", passive_deletes=True)
-    teams = db.relationship('Team', backref='project', lazy='select')
+    teams = db.relationship('Team', backref='project', lazy='select', cascade="all, delete", passive_deletes=True)
 
     @property
     def status(self):
@@ -167,7 +167,7 @@ class SkillRequired(db.Model):
     __tablename__ = 'skill_required'
 
     id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id', ondelete="cascade"), nullable=False, index=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id', ondelete="CASCADE"), nullable=False, index=True)
     skill_id = db.Column(db.Integer, db.ForeignKey('skill.id'), nullable=False, index=True)
 
     def __repr__(self):
@@ -179,6 +179,7 @@ class Status(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False)
+    description = db.Column(db.String(120))
     domain_id = db.Column(db.Integer, db.ForeignKey('domain.id'), nullable=False, index=True)
     action_text = db.Column(db.String(10), nullable=False)
     css_class = db.Column(db.String(10), nullable=False)
@@ -209,7 +210,7 @@ class Team(db.Model):
     __tablename__ = 'team'
 
     id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False, index=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id', ondelete='CASCADE'), nullable=False, index=True)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     created_date = db.Column(db.DateTime, default=datetime.datetime.now)
     updated_date = db.Column(db.DateTime, default=datetime.datetime.now)
@@ -227,7 +228,7 @@ class TeamMember(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    team_id = db.Column(db.Integer, db.ForeignKey('team.id', ondelete='cascade'), nullable=False, index=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
     created_date = db.Column(db.DateTime, default=datetime.datetime.now)
 
     def __repr__(self):
@@ -249,7 +250,7 @@ class User(UserMixin, db.Model):
     programme_code = db.Column(db.String(10), db.ForeignKey('programme.code'))
     profile_comment = db.Column(db.Text)
     is_admin = db.Column(db.Boolean, default=False)
-    is_external = db.Column(db.Boolean, default=False)
+    is_external = db.Column(db.Boolean, default=True)
     notify_new = db.Column(db.Boolean, default=False)
     notify_interest = db.Column(db.Boolean, default=False)
     created_date = db.Column(db.DateTime, default=datetime.datetime.now)

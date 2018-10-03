@@ -75,6 +75,7 @@ class SkillForm(FlaskForm):
 
 class StatusForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
+    description = StringField('Description')
     domain_id = SelectField('Domain', coerce=int)
     action_text = StringField('Action text')
     css_class = StringField('css class')

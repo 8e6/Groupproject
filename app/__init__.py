@@ -1,4 +1,6 @@
 # third-party imports
+import sys
+
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -15,7 +17,9 @@ login_manager = LoginManager()
 
 
 def create_app(config_name):
-    app = Flask(__name__, instance_relative_config=True)
+    app_dir = os.path.dirname(__file__)
+    app = Flask(__name__, instance_path=os.path.dirname(app_dir) + '/instance', instance_relative_config=True)
+    print('FILE:',os.path.dirname(app_dir))
     app.config.from_object(app_config[config_name])
     app.config.from_pyfile('config.py')
     db.init_app(app)

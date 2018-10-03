@@ -10,17 +10,17 @@ body, h1, h2, h3 {
 }
 
 a, .navbar-default .navbar-brand, .navbar-default .navbar-nav>li>a {
-  color: #aec251;
+  color: #c31632;
 }
 
 a:hover, .navbar-default .navbar-brand:hover, .navbar-default .navbar-nav>li>a:hover {
-  color: #687430;
+  color: #4D1A22;
 }
 
 footer {
     padding: 50px 0;
     background-color: #f8f8f8;
-    position: absolute;
+    position: relative;
     bottom: 0px;
     width: 100%;
 }
@@ -34,16 +34,16 @@ p.copyright {
     margin: auto;
     color: #687430;
     background-color: #e6ecca;
-    border-color: #aec251;
+    border-color: #c31632;
 }
 
 .btn-default {
-    border-color: #aec251;
-    color: #aec251;
+    border-color: #c31632;
+    color: #c31632;
 }
 
 .btn-default:hover {
-    background-color: #aec251;
+    background-color: #c31632;
 }
 
 .center {
@@ -53,15 +53,25 @@ p.copyright {
 }
 
 .content-section {
-    padding: 90px 0px 150px 0px;
+    padding: 90px 0px 0px 0px;
     min-height: 100%;
     position: relative;
     border-top: 1px solid #e7e7e7;
 }
 
+.content-text {
+    background-color: white;
+    border-width: 0px;
+}
+
 .footer, .push {
     clear: both;
     height: 4em;
+}
+
+.info-text {
+    font-style: italic;
+    font-size: small;
 }
 
 .intro-divider {
@@ -77,6 +87,26 @@ p.copyright {
     color: #f8f8f8;
     background: url(../images/ice_lab.jpg) no-repeat center center;
     background-size: cover;
+    height: 100%;
+}
+
+.intro-header-pale::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .1;
+    filter: alpha(opacity=10);
+    z-index: -1;
+    background-size: cover;
+    background: url(../images/ice_lab.jpg) no-repeat center center;
+}
+
+.intro-header-pale {
+    padding-top: 50px;
+    padding-bottom: 50px;
     height: 100%;
 }
 
@@ -135,7 +165,7 @@ p.copyright {
     padding: .25rem 1.5rem;
     clear: both;
     font-weight: 400;
-    color: #aec251;
+    color: #c31632;
     text-align: inherit;
     white-space: nowrap;
     background-color: transparent;
@@ -170,4 +200,81 @@ p.copyright {
 #logo {
     float: right;
     margin-bottom: 10px;
+}
+
+.card {
+    background-color: white;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.bids-badge {
+    margin-left: 10px;
+}
+
+/* Toast functionality. See https://www.w3schools.com/howto/howto_js_snackbar.asp */
+/* The toast - position it at the bottom and in the middle of the screen */
+.toast {
+    visibility: hidden; /* Hidden by default. Visible on click */
+    min-width: 250px; /* Set a default minimum width */
+    margin-left: -125px; /* Divide value of min-width by 2 */
+    text-align: center; /* Centered text */
+    border-radius: 2px; /* Rounded borders */
+    padding: 16px; /* Padding */
+    position: fixed; /* Sit on top of the screen */
+    z-index: 1; /* Add a z-index if needed */
+    right: 20px; /* Center the snackbar */
+    top: 100px; /* 30px from the bottom */
+}
+
+/* Show the toast when clicking on a button (class added with JavaScript) */
+.toast.show {
+    visibility: visible; /* Show the toast */
+    /* Add animation: Take 0.5 seconds to fade in and out the toast.
+   However, delay the fade out process for 2.5 seconds */
+   -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+   animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+/* Animations to fade the toast in and out */
+@-webkit-keyframes fadein {
+    from {top: 50px; opacity: 0;}
+    to {top: 100px; opacity: 1;}
+}
+
+@keyframes fadein {
+    from {top: 50px; opacity: 0;}
+    to {top: 100px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeout {
+    from {top: 100px; opacity: 1;}
+    to {top: 150px; opacity: 0;}
+}
+
+@keyframes fadeout {
+    from {top: 100px; opacity: 1;}
+    to {top: 150px; opacity: 0;}
+}
+
+.toast-info {
+    background-color: #C6D8F7; /* Blue background color */
+    color: #000;
+}
+
+.toast-message {
+    background-color: #E2F2C2; /* Green background color */
+    color: #000;
+}
+
+.toast-warning {
+    background-color: #FCFFD9; /* Yellow background color */
+    color: #000;
+}
+
+.toast-error {
+    background-color: #E0A8B2; /* Red background color */
+    color: #000;
 }

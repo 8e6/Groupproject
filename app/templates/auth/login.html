@@ -5,13 +5,11 @@
 {% block content %}
 <div class="content-section">
   <br/>
-  {{ utils.flashed_messages() }}
-  <br/>
   <div class="center">
     <h1>Login to your account</h1>
     <br/>
     {{ wtf.quick_form(form) }}
   </div>
-    {% block footer %} {{  super() }} {% endblock footer%}
 </div>
+    {% block footer %} {{  super() }} {% endblock footer%}
 {% endblock %}

@@ -1,18 +1,80 @@
+{% import "bootstrap/utils.html" as utils %}
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
-{% block body %}
-<div class="intro-header">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="intro-message">
-                    <h1>The Dashboard</h1>
-                    <h3>We made it here!</h3>
+{% block content %}
+<div class="content-section">
+    <div class="outer">
+        <div class="middle">
+            <div class="inner">
+            <div class="center">
+                <br/>
+                {% if projects %}
+                    <div class="card">
+                        <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs">
+                        {% for project in projects %}
+                              <li class="nav-item">
+                                <a class="nav-link active" id="{{ project.id }}-tab" data-toggle="tab" href="#{{ project.id }}"
+                                   role="tab" aria-controls="home" aria-selected="true" aria-expanded="true">Project {{ loop.index }}</a>
+                              </li>
+                        {% endfor %}
+                        </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content" id="myTabContent">
+                                {% for project in projects %}
+                                    {% if loop.first %}
+                                        <div class="tab-pane fade active in" id="{{project.id}}" role="tabpanel" aria-labelledby="{{project.id}}-tab">
+                                    {% else %}
+                                        <div class="tab-pane fade" id="{{project.id}}" role="tabpanel" aria-labelledby="{{project.id}}-tab">
+                                    {% endif %}
+
+                                        <h4>{{ project.title }}</h4>
+                                        <p class="info-text">Academic year: {{ project.academic_year }}      Created: {{ project.created_date }}</p>
+                                        <p>Status {{ project.status.name }}: {{ project.status.description }}</p>
+                                        <h5>Overview </h5>
+                                            <pre class="content-text">{{ project.overview }}</pre>
+                                        <h5>Deliverables </h5>
+                                            <pre class="content-text">{{ project.deliverables }}</pre>
+                                        <h5>Resources </h5>
+                                            <pre class="content-text">{{ project.resources }}</pre>
+                                        <h5>Skills required </h5>
+                                            {% for skill in project.skills_required %}
+                                                {{ skill.skill_required.name }}<br/>
+                                            {%  endfor %}
+
+                                        <br/><br/>
+
+                                        {% if project.teams %}
+                                            <button type="button" class="btn btn-primary">
+                                                Bids <span class="bids-badge badge badge-light">{{ project.teams|length }}</span>
+                                            </button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-primary disabled">
+                                                Bids <span class="badge badge-light">0</span>
+                                            </button>
+                                        {% endif %}
+
+                                        <a href="{{url_for('client.edit_project', id=project.id) }}" class="btn btn-primary">Edit</a>
+                                        <a href="{{url_for('client.delete_project', id=project.id) }}"
+                                           data-toggle="confirmation"
+                                           data-title="Are you sure?"
+                                           class="btn btn-primary">Delete</a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                  <div style="text-align: center">
+                    <h3> You have no projects yet. You can add a new one using the link in the menu bar. </h3>
                     <hr class="intro-divider">
-                    </ul>
+                {% endif %}
                 </div>
+            </div>
             </div>
         </div>
     </div>
 </div>
+    {% block footer %} {{  super() }} {% endblock footer%}
 {% endblock %}

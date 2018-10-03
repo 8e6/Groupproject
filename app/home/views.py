@@ -1,6 +1,7 @@
 from flask import abort, render_template
 from flask_login import current_user, login_required
 
+from app.models import Project
 from . import home
 
 
@@ -26,4 +27,5 @@ def dashboard():
     """
     Render the dashboard template on the /dashboard route
     """
-    return render_template('home/dashboard.html', title="Dashboard")
+    projects = Project.query.filter(Project.client_id == current_user.id).all()
+    return render_template('home/dashboard.html', projects=projects, title="Dashboard")

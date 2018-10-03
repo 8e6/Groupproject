@@ -7,8 +7,6 @@
     <div class="middle">
       <div class="inner">
         <br/>
-        {{ utils.flashed_messages() }}
-        <br/>
         <h1 style="text-align:center;">Statuses</h1>
         {% if statuses %}
           <hr class="intro-divider">
@@ -17,6 +15,7 @@
               <thead>
                 <tr>
                   <th width="15%"> Name </th>
+                  <th width="15%"> Description </th>
                   <th width="40%"> Domain </th>
                   <th width="15%"> Action text </th>
                   <th width="15%"> css class </th>
@@ -29,6 +28,7 @@
               {% for status in statuses %}
                 <tr>
                   <td> {{ status.name }} </td>
+                  <td> {{ status.description }} </td>
                   <td> {{ status.domain.name }} </td>
                   <td> {{ status.action_text }} </td>
                   <td> {{ status.css_class }} </td>

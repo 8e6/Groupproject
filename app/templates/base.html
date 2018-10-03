@@ -12,6 +12,13 @@
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/style.css')}}">
 {% endblock %}
 
+{% block scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
+    {{super()}}
+    <script src="{{url_for('static', filename='scripts/bootstrap-confirmation.js')}}"></script>
+    <script src="{{url_for('static', filename='scripts/soc09109.js')}}"></script>
+{% endblock %}
+
 {% block navbar %}
     <nav class="navbar navbar-expand-lg navbar-default navbar-fixed-top topnav" role="navigation">
         <div id="logo">
@@ -29,7 +36,7 @@
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav navbar-left">
                 {% if current_user.is_authenticated %}
-                  {% if current_user.is_admin %}
+                    {% if current_user.is_admin %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('home.admin_dashboard') }}">Dashboard</a></li>
                       <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -52,7 +59,8 @@
                       </li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.update_settings') }}">Settings</a></li>
                   {% else %}
-                    <li><a href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
+                     <li class="nav-item"><a class="nav-link" href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
+                     <li class="nav-item"><a class="nav-link" href="{{ url_for('client.add_project') }}">New project</a></li>
                   {% endif %}
                   <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                 {% else %}
@@ -64,6 +72,23 @@
           </div>
         </div>
     </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+      {% if messages %}
+        {% for category, message in messages %}
+            <div id="toast-{{ loop.index }}" class="toast toast-{{ category }}" role="alert" >
+                {{ message }}
+            </div>
+                <script type="text/javascript">
+                        var x = document.getElementById("toast-{{ loop.index }}");
+                        x.className += " show";
+                        setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+                </script>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
 {% endblock navbar %}
 
 {% block footer %}

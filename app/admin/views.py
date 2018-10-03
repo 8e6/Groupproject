@@ -691,6 +691,7 @@ def add_status():
     form.domain_id.choices = [(d.id, d.name) for d in Domain.query.order_by(text('name'))]
     if form.validate_on_submit():
         status = Status(name = form.name.data,
+                        description = form.description.data,
                         domain_id = form.domain_id.data,
                         action_text = form.action_text.data,
                         css_class = form.css_class.data,
@@ -721,6 +722,7 @@ def edit_status(id):
     form.domain_id.choices = [(d.id, d.name) for d in Domain.query.order_by(text('name'))]
     if form.validate_on_submit():
         status.name = form.name.data
+        status.description = form.description.data
         status.domain_id = form.domain_id.data
         status.action_text = form.action_text.data
         status.css_class = form.css_class.data
@@ -732,6 +734,7 @@ def edit_status(id):
         return redirect(url_for('admin.list_statuses'))
 
     form.name.data = status.name
+    form.description = status.description
     form.domain_id.data = status.domain_id
     form.action_text.data = status.action_text
     form.css_class.data = status.css_class
