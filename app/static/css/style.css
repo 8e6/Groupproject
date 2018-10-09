@@ -44,6 +44,7 @@ p.copyright {
 
 .btn-default:hover {
     background-color: #c31632;
+    color: #ffffff;
 }
 
 .center {
@@ -64,9 +65,34 @@ p.copyright {
     border-width: 0px;
 }
 
+.disabled .dropdown-item{
+    color: #212529;
+    text-decoration: none;
+}
+
 .footer, .push {
     clear: both;
     height: 4em;
+}
+
+form #message {
+    min-height: 200px;
+}
+
+form #overview {
+    min-height: 200px;
+}
+
+form #deliverables {
+    min-height: 100px;
+}
+
+form #resources {
+    min-height: 100px;
+}
+
+form #skills_required {
+    min-height: 120px;
 }
 
 .info-text {
@@ -213,6 +239,30 @@ p.copyright {
 .bids-badge {
     margin-left: 10px;
 }
+
+.yes-no .radio {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.yes-no label {
+    margin-right: 10px;
+}
+
+.short-horizontal {
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.short-horizontal input {
+    width: 300px;
+    margin-right: 10px;
+}
+
+#submit {
+    display: block;
+}
+
 
 /* Toast functionality. See https://www.w3schools.com/howto/howto_js_snackbar.asp */
 /* The toast - position it at the bottom and in the middle of the screen */

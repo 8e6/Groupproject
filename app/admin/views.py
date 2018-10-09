@@ -5,7 +5,10 @@ from sqlalchemy.sql import text
 from . import admin
 from .forms import *
 from .. import db
+from .. import scheduler
+from .. import jobs
 from ..models import *
+from ..scheduled_jobs import Jobs
 
 def check_admin():
     if not current_user.is_admin:
@@ -326,7 +329,12 @@ def add_faq():
 
     form = FaqForm()
     if form.validate_on_submit():
-        faq = Faq(name=form.name.data, description=form.description.data)
+        faq = Faq(question=form.question.data,
+                  answer=form.answer.data,
+                  rank=form.rank.data,
+                  external=form.external.data,
+                  student=form.student.data
+                  )
 
         try:
             db.session.add(faq)
@@ -350,7 +358,6 @@ def edit_faq(id):
     faq = Faq.query.get_or_404(id)
     form = FaqForm(obj=faq)
     if form.validate_on_submit():
-        faq.id = form.id.data
         faq.question = form.question.data
         faq.answer = form.answer.data
         faq.rank = form.rank.data
@@ -362,9 +369,11 @@ def edit_faq(id):
 
         return redirect(url_for('admin.list_faqs'))
 
-    form.name.id = faq.id
-    form.name.data = faq.name
-    form.description.data = faq.description
+    form.question.id = faq.question
+    form.answer.data = faq.answer
+    form.rank.data = faq.rank
+    form.external.data = faq.external
+    form.student.data = faq.student
     return render_template('admin/faqs/faq.html', add_faq=add_faq,
                            form=form, title="Edit FAQ")
 
@@ -581,10 +590,16 @@ def update_settings():
     check_admin()
 
     settings = Settings.query.first()
+    all_jobs = [j for j in dir(Jobs) if type(getattr(Jobs, j)).__name__ == 'function']
+    running = [j.id for j in scheduler.get_jobs()]
     form = SettingsForm(obj=settings)
     if form.validate_on_submit():
         settings.name=form.name.data,
-        settings.last_notification_check=form.last_notification_check.data
+        settings.subtitle=form.subtitle.data,
+        settings.notification_period=form.notification_period.data,
+        settings.last_notification_check=form.last_notification_check.data,
+        settings.contact_name=form.contact_name.data,
+        settings.contact_email=form.contact_email.data
 
         try:
             db.session.add(settings)
@@ -596,9 +611,26 @@ def update_settings():
         return redirect(url_for('home.admin_dashboard'))
 
     form.name.data = settings.name
+    form.subtitle.data = settings.subtitle
+    form.notification_period.data = settings.notification_period
     form.last_notification_check.data = settings.last_notification_check
+    form.contact_name.data = settings.contact_name
+    form.contact_email.data = settings.contact_email
 
-    return render_template('admin/settings/settings.html', form=form, title='Settings')
+    return render_template('admin/settings/settings.html', form=form, title='Settings', all_jobs=all_jobs, running=running)
+
+@admin.route('/add/<id>')
+def add_scheduled_job(id):
+    scheduler.add_job(func=eval('jobs.' + id), trigger="interval", seconds=3, id=id)
+    flash(id + ' has been successfully started as a background job')
+    return redirect(url_for('admin.update_settings'))
+
+
+@admin.route('/remove/<id>')
+def remove_scheduled_job(id):
+    scheduler.remove_job(id)
+    flash(id + ' has been successfully stopped')
+    return redirect(url_for('admin.update_settings'))
 
 
 #--------  Skill views ----------#
@@ -888,7 +920,9 @@ def add_transition():
     form.to_status_id.choices = [(s.id, s.domain.name + ' - ' + s.name) for s in Status.query.order_by(text('name'))]
     if form.validate_on_submit():
         transition = Transition(from_status_id = form.from_status_id.data,
-                                to_status_id = form.to_status_id.data)
+                                to_status_id = form.to_status_id.data,
+                                admin_only = form.admin_only.data
+                                )
 
         try:
             db.session.add(transition)
@@ -916,6 +950,7 @@ def edit_transition(id):
     if form.validate_on_submit():
         transition.from_status_id = form.from_status_id.data
         transition.to_status_id = form.to_status_id.data
+        transition.admin_only = form.admin_only.data
         db.session.add(transition)
         db.session.commit()
         flash('You have successfully edited the transition.')
@@ -924,6 +959,7 @@ def edit_transition(id):
 
     form.from_status_id.data = transition.from_status_id
     form.to_status_id.data = transition.to_status_id
+    form.admin_only.data = transition.admin_only
 
     return render_template('admin/transitions/transition.html', add_transition=add_transition,
                            form=form, title="Edit transition")
@@ -951,6 +987,35 @@ def list_users():
 
     users = User.query.all()
     return render_template('admin/users/users.html', users=users, title='Users')
+
+
+@admin.route('/users/confirm', methods=['GET', 'POST'])
+@login_required
+def confirm_users():
+    check_admin()
+    users = User.query.filter(User.company_confirmed == 0).all()
+
+    return render_template('admin/users/user_confirmation.html',
+                           users=users,
+                           title='Confirm company')
+
+
+@admin.route('/confirm/<int:id>', methods=['GET', 'POST'])
+@login_required
+def confirm_user(id):
+    check_admin()
+
+    user = User.query.get_or_404(id)
+    user.company_confirmed = True
+    db.session.add(user)
+    db.session.commit()
+    flash('Company confirmed for ' + user.first_name + ' ' + user.last_name)
+
+    users = User.query.filter(User.company_confirmed == 0).all()
+    return render_template('admin/users/user_confirmation.html',
+                           users=users,
+                           title='Confirm company')
+
 
 
 @admin.route('/users/assign/<int:id>', methods=['GET', 'POST'])

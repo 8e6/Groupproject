@@ -56,10 +56,18 @@
                                         {% endif %}
 
                                         <a href="{{url_for('client.edit_project', id=project.id) }}" class="btn btn-primary">Edit</a>
+                                    {#
                                         <a href="{{url_for('client.delete_project', id=project.id) }}"
                                            data-toggle="confirmation"
                                            data-title="Are you sure?"
                                            class="btn btn-primary">Delete</a>
+                                     #}
+                                        {% for transition in transitions %}
+                                            <a href="{{url_for('client.transition', id=project.id, status_id=transition.to_status_id) }}"
+                                               data-toggle="confirmation"
+                                               data-title="Are you sure?"
+                                               class="btn btn-primary">{{transition.to_status.action_text}}</a>
+                                        {% endfor %}
                                 </div>
                                 {% endfor %}
                             </div>
@@ -67,7 +75,7 @@
                     </div>
                 {% else %}
                   <div style="text-align: center">
-                    <h3> You have no projects yet. You can add a new one using the link in the menu bar. </h3>
+                    <h4> You have no projects yet.<br/><br/>You can add a new one using the link in the menu bar. </h4>
                     <hr class="intro-divider">
                 {% endif %}
                 </div>

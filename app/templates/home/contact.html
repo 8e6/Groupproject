@@ -1,17 +1,15 @@
 {% import "bootstrap/utils.html" as utils %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
-{% block title %}Login{% endblock %}
+{% block title %}Contact{% endblock %}
 {% block content %}
 <div class="content-section">
   <br/>
   <div class="center">
-    <h1>Login to your account</h1>
+    <h1>Contact us</h1>
     <br/>
     {{ wtf.quick_form(form) }}
-    <br/>
-    <a href="{{ url_for('auth.forgotten') }}">Forgotten password...</a>
   </div>
 </div>
-{% block footer %} {{  super() }} {% endblock footer%}
+    {% block footer %} {{  super() }} {% endblock footer%}
 {% endblock %}

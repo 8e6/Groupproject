@@ -1,12 +1,18 @@
 # third-party imports
 import sys
+import os
+import apscheduler as ap
+import time
+import atexit
 
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
-import os
+from apscheduler.schedulers.background import BackgroundScheduler
+from .scheduled_jobs import Jobs
+from flask import Flask
 
 # local imports
 from config import app_config
@@ -15,22 +21,15 @@ from config import app_config
 db = SQLAlchemy()
 login_manager = LoginManager()
 
+scheduler = BackgroundScheduler()
+jobs = Jobs()
 
 def create_app(config_name):
     app_dir = os.path.dirname(__file__)
     app = Flask(__name__, instance_path=os.path.dirname(app_dir) + '/instance', instance_relative_config=True)
-    print('FILE:',os.path.dirname(app_dir))
     app.config.from_object(app_config[config_name])
     app.config.from_pyfile('config.py')
     db.init_app(app)
-
-    @app.route('/test')
-    def testdb():
-        try:
-            db.session.query("1").from_statement("SELECT 1").all()
-            return '<h1>It works.</h1>'
-        except:
-            return '<h1>Something is broken.</h1>'
 
     login_manager.init_app(app)
     login_manager.login_message = "You must be logged in to access this page."
@@ -39,6 +38,9 @@ def create_app(config_name):
     migrate = Migrate(app, db)
 
     Bootstrap(app)
+
+    scheduler.start()
+    atexit.register(lambda: scheduler.shutdown())
 
     from app import models
 
@@ -68,5 +70,7 @@ def create_app(config_name):
     @app.errorhandler(500)
     def internal_server_error(error):
         return render_template('errors/500.html', title='Server Error'), 500
+
+
 
     return app

@@ -1,30 +1,58 @@
-from flask import flash, redirect, render_template, url_for
-from flask_login import login_required, login_user, logout_user
+from flask import flash, redirect, render_template, url_for, current_app, abort
+from flask_login import login_required, login_user, logout_user, current_user
+from flask_mail import Message, Mail
 
 from . import auth
-from .forms import LoginForm, RegistrationForm
+from .forms import *
 from .. import db
-from ..models import User
+from ..models import User, Company
 
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
-    """
-    Handle requests to the /register route
-    Add an employee to the database through the registration form
-    """
     form = RegistrationForm()
     if form.validate_on_submit():
-        employee = User(email=form.email.data,
-                        username=form.username.data,
-                        first_name=form.first_name.data,
-                        last_name=form.last_name.data,
-                        password=form.password.data)
-
-        # add employee to the database
-        db.session.add(employee)
+        company = Company(
+            name=' New company',
+            description='placeholder',
+            address='placeholder',
+            city='placeholder',
+            post_code='placehldr'
+        )
+        db.session.add(company)
         db.session.commit()
-        flash('You have successfully registered! You may now login.')
+
+        user = User(email=form.email.data,
+                    username=form.username.data,
+                    first_name=form.first_name.data,
+                    last_name=form.last_name.data,
+                    password=form.password.data,
+                    token=form.email.data,
+                    company_id=company.id)
+
+        db.session.add(user)
+        db.session.commit()
+
+        company.created_by = user.id
+        db.session.commit()
+
+        body = """
+        Thank you for registering on the Edinburgh Napier University student project exchange.
+         
+        To confirm your email address and unlock your account, please click the link below.
+        
+        https://soc09109.napier.ac.uk/auth/confirm/"""
+
+        body += User.generate_token(user.email)
+
+        msg = Message(subject="Edinburgh Napier project exchange",
+                      body=body,
+                      sender="no-reply@soc09109.napier.ac.uk",
+                      recipients=[user.email])
+        mail = Mail(current_app)
+        mail.send(msg)
+
+        flash('Please check your email inbox')
 
         # redirect to the login page
         return redirect(url_for('auth.login'))
@@ -33,25 +61,42 @@ def register():
     return render_template('auth/register.html', form=form, title='Register')
 
 
+@auth.route('/confirm/<token>', methods=['GET', 'POST'])
+def confirm(token):
+    try:
+        user = User.query.filter_by(confirmation_token=token).first_or_404()
+    except:
+        flash('Confirmation token does not match', 'error')
+        abort(404)
+
+    user.confirmation_token = None
+    db.session.add(user)
+    db.session.commit()
+    flash('Your account is confirmed - please log in')
+    return redirect(url_for('auth.login'))
+
+
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        if user is not None and user.verify_password(form.password.data):
+
+        if user is not None and user.confirmation_token is not None:
+            flash('Unconfirmed. Please check your email inbox', 'error')
+
+        elif user is not None and user.verify_password(form.password.data):
             login_user(user)
 
-            # redirect to the appropriate dashboard page
             if user.is_admin:
                 return redirect(url_for('home.admin_dashboard'))
             elif user.is_external:
-                return redirect(url_for('home.client_dashboard'))
+                return redirect(url_for('home.dashboard'))
             else:
                 return redirect(url_for('home.dashboard'))
 
-        # when login details are incorrect
         else:
-            flash('Invalid email or password.')
+            flash('Invalid email or password', 'error')
 
     # load login template
     return render_template('auth/login.html', form=form, title='Login')
@@ -60,12 +105,81 @@ def login():
 @auth.route('/logout')
 @login_required
 def logout():
-    """
-    Handle requests to the /logout route
-    Log an employee out through the logout link
-    """
     logout_user()
     flash('You have successfully been logged out.')
 
     # redirect to the login page
     return redirect(url_for('home.homepage'))
+
+
+@auth.route('/password', methods=['GET', 'POST'])
+@login_required
+def password():
+    user = User.query.get(current_user.id)
+    form = PasswordForm()
+    if form.validate_on_submit():
+        if user.verify_password(form.current.data):
+            user.password=form.password.data
+            db.session.add(user)
+            db.session.commit()
+            flash('Password updated')
+            if current_user.is_admin:
+                return redirect(url_for('home.admin_dashboard'))
+            else:
+                return redirect(url_for('home.dashboard'))
+        else:
+            flash('Incorrect current passwork entered', 'error')
+
+    return render_template('auth/password.html', form=form, title='Change password')
+
+
+@auth.route('/forgotten', methods=['GET', 'POST'])
+def forgotten():
+    form = ForgottenForm()
+    if form.validate_on_submit():
+        try:
+            user = User.query.filter_by(User.email == form.email.data)
+            token = User.generate_token(user.email)
+            user.token = token
+            body = """
+            The Edinburgh Napier Projects Exchange has received a password reset request for your account.
+
+            To create a new password, please click the link below.
+
+            https://soc09109.napier.ac.uk/auth/reset/"""
+
+            body += token
+
+            msg = Message(subject="Edinburgh Napier project exchange",
+                          body=body,
+                          sender="no-reply@soc09109.napier.ac.uk",
+                          recipients=[user.email])
+            mail = Mail(current_app)
+            mail.send(msg)
+
+            flash('Please check your email inbox')
+        except:
+            flash('Email not recognised', 'error')
+
+    return render_template('auth/forgotten.html', form=form, title='Change password')
+
+
+@auth.route('/reset/<token>', methods=['GET', 'POST'])
+@login_required
+def reset(token):
+    try:
+        user = User.query.filter_by(confirmation_token=token).first_or_404()
+    except:
+        flash('Confirmation token does not match', 'error')
+        abort(404)
+
+    form = ResetForm()
+    if form.validate_on_submit():
+        user.password=form.password.data
+        user.token = None
+        db.session.add(user)
+        db.session.commit()
+        flash('Password updated - please log in')
+        return redirect(url_for('home.login'))
+
+    return render_template('auth/reset.html', form=form, title='Reset password')

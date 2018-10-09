@@ -1,0 +1,32 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+{% block title %}
+    Profile
+{% endblock %}
+{% block content %}
+<div class="content-section">
+ <div class="outer">
+    <div class="middle">
+      <div class="inner">
+        <div class="center">
+            <h1>Profile</h1>
+            <br/>
+            <form method='post' role='form'>
+                {{wtf.form_field(form.email)}}
+                {{wtf.form_field(form.username)}}
+                {{wtf.form_field(form.first_name)}}
+                {{wtf.form_field(form.last_name)}}
+                {{wtf.form_field(form.telephone)}}
+                {% if user.company.name == ' New company' %}
+                    {{wtf.form_field(form.company_id)}}
+                {% endif %}
+                {{wtf.form_field(form.profile_comment)}}
+                {{wtf.form_field(form.submit)}}
+                {{ form.csrf_token }}
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

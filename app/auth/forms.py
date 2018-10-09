@@ -6,9 +6,6 @@ from ..models import User
 
 
 class RegistrationForm(FlaskForm):
-    """
-    Form for users to create new account
-    """
     email = StringField('Email', validators=[DataRequired(), Email()])
     username = StringField('Username', validators=[DataRequired()])
     first_name = StringField('First Name', validators=[DataRequired()])
@@ -30,9 +27,30 @@ class RegistrationForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-    """
-    Form for users to login
-    """
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
+
+
+class PasswordForm(FlaskForm):
+    current = PasswordField('Current password', validators=[DataRequired()])
+    password = PasswordField('New password', validators=[
+                                        DataRequired(),
+                                        EqualTo('confirm_password')
+                                        ])
+    confirm_password = PasswordField('Confirm new password')
+    submit = SubmitField('Change')
+
+
+class ResetForm(FlaskForm):
+    password = PasswordField('New password', validators=[
+                                        DataRequired(),
+                                        EqualTo('confirm_password')
+                                        ])
+    confirm_password = PasswordField('Confirm new password')
+    submit = SubmitField('Change')
+
+
+class ForgottenForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Submit')

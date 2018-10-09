@@ -1,5 +1,5 @@
 {% extends "bootstrap/base.html" %}
-{% block title %}{{ title }} | Project Dream Team{% endblock %}
+{% block title %}{{ title }} | ProjeX{% endblock %}
 {% import "bootstrap/fixes.html" as fixes %}
 
 {% block head %}
@@ -21,6 +21,7 @@
 
 {% block navbar %}
     <nav class="navbar navbar-expand-lg navbar-default navbar-fixed-top topnav" role="navigation">
+        <a class="navbar-brand" href="/"><img src="{{url_for('static', filename='images/projex64.png')}}"></a>
         <div id="logo">
               <a class="navbar-brand topnav" href="{{ url_for('home.homepage') }}"><img src="{{url_for('static', filename='images/imgLogo50.gif')}}"></a>
         </div>
@@ -62,6 +63,19 @@
                      <li class="nav-item"><a class="nav-link" href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
                      <li class="nav-item"><a class="nav-link" href="{{ url_for('client.add_project') }}">New project</a></li>
                   {% endif %}
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Profile
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="profileDropdown">
+                        <a class="dropdown-item" href="{{ url_for('client.profile') }}">Personal profile</a>
+                        {% if current_user.company.employees | length == 1 or current_user.company_confirmed %}
+                            <a class="dropdown-item" href="{{ url_for('client.company') }}">Company details</a>
+                        {%  else %}
+                            <span class="disabled"><a class="dropdown-item" href="#">Company details</a></span>
+                        {% endif %}
+                        <a class="dropdown-item" href="{{ url_for('auth.password') }}">Change password</a>
+                    </div>
                   <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                 {% else %}
                   <li><a href="{{ url_for('home.homepage') }}">Home</a></li>
@@ -106,8 +120,16 @@
                           <li class="footer-menu-divider">⋅</li>
                           <li><a href="{{ url_for('auth.login') }}">Login</a></li>
                         {% endif %}
+                          <li class="footer-menu-divider">⋅</li>
+                         <li class="nav-item"><a class="nav-link" href="{{ url_for('home.privacy') }}">Privacy</a></li>
+                          <li class="footer-menu-divider">⋅</li>
+                        <li><a href="{{ url_for('home.faq') }}">FAQ</a></li>
+                          <li class="footer-menu-divider">⋅</li>
+                        <li><a href="{{ url_for('home.contact') }}">Contact</a></li>
+
                     </ul>
-                    <p class="copyright text-muted small">Copyright © 2016. All Rights Reserved</p>
+                    <p class="copyright text-muted small">© 2018 Edinburgh Napier University</p>
+                <p class="copyright text-muted small">Edinburgh Napier University is a registered Scottish charity. Registration SC018373</p>
                 </div>
             </div>
         </div>

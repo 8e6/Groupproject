@@ -1,7 +1,7 @@
 import datetime
 from flask_login import UserMixin
 from sqlalchemy.orm import relationship
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash, pbkdf2_hex
 
 from app import db, login_manager
 
@@ -39,10 +39,45 @@ class Company(db.Model):
     address = db.Column(db.String(120), index=True)
     city = db.Column(db.String(60), index=True)
     post_code = db.Column(db.String(10))
+    web = db.Column(db.String(120), index=True, unique=True)
+    health_policy_flag = db.Column(db.Boolean, default=False)             # Does the company have a written H&S policy?
+    health_policy_link = db.Column(db.String(120))                        # Link to policy
+    training_policy_flag = db.Column(db.Boolean, default=False)           # Does the company have a H&S training policy?
+    training_policy_link = db.Column(db.String(120))                      # Link to policy
+    hse_registered = db.Column(db.Boolean, default=False)                 # Is the company registered with HSE?
+    la_registered = db.Column(db.Boolean, default=False)                  # Is the company registered with local auth. environmental health dept?
+    insured = db.Column(db.Boolean, default=False)                        # Does the company have public liability insurance?
+    student_insured = db.Column(db.Boolean, default=False)                # Is the student covered by this policy?
+    company_risk_assessed = db.Column(db.Boolean, default=False)          # Has a company risk assessment been carried out?
+    risks_reviewed = db.Column(db.Boolean, default=False)                 # Are the risks reviewed regularly?
+    risks_mitigated = db.Column(db.Boolean, default=False)                # Are the risk assessment results implemented?
+    accident_procedure_flag = db.Column(db.Boolean, default=False)         # Is there a procedure for reporting accidents (RIDDOR)?
+    emergency_procedures_flag = db.Column(db.Boolean, default=False)      # Are emergency procedures in place?
+    report_student_accidents_flag = db.Column(db.Boolean, default=False)  # Will all accidents concerning students be reported to the University?
+    report_student_illness_flag = db.Column(db.Boolean, default=False)    # Will any student illness attributable to the work be reported to the University?
+    data_policy_flag = db.Column(db.Boolean, default=False)               # Is there a data protection policy?
+    data_policy_link = db.Column(db.String(120))                          # Link to policy
+    security_measures_flag = db.Column(db.Boolean, default=False)         # Are data protection/privacy measures in place?
+    ico_registration_number = db.Column(db.String(20))                    # Registration No. with ICO
+    data_training_flag = db.Column(db.Boolean, default=False)             # Do staff receive regular data protection training?
+    security_policy_flag = db.Column(db.Boolean, default=False)           # Are information security policies in place?
+    security_policy_link = db.Column(db.String(120))                      # Link to policy
+    privacy_notice_flag = db.Column(db.Boolean, default=False)            # Is there a staff privacy notice that would cover the student?
+    data_contact_first_name = db.Column(db.String(30))
+    data_contact_last_name = db.Column(db.String(30))
+    data_contact_position = db.Column(db.String(30))
+    data_contact_telephone = db.Column(db.String(30))
     employees = db.relationship('User', backref='company', lazy='joined')
 
     def __repr__(self):
         return '<Company: {}>'.format(self.name)
+
+    @property
+    def percent_complete(self):
+        attributes = [a for a in self.__dict__]
+        null_attributes = [a for a in self.__dict__ if self.__getattribute__(a) is None]
+
+        return (len(attributes) - len(null_attributes)) / len(attributes)
 
 
 class Domain(db.Model):
@@ -136,7 +171,11 @@ class Settings(db.Model):
     __tablename__ = 'settings'
 
     name = db.Column(db.String(60), primary_key=True)
+    subtitle = db.Column(db.String(120))
+    notification_period = db.Column(db.Integer, nullable=False, default=4)
     last_notification_check = db.Column(db.DateTime, nullable=False)
+    contact_name = db.Column(db.String(60))
+    contact_email = db.Column(db.String(60))
 
 
 class Skill(db.Model):
@@ -197,6 +236,7 @@ class Transition(db.Model):
     __tablename__ = 'transition'
 
     id = db.Column(db.Integer, primary_key=True)
+    admin_only = db.Column(db.Boolean, default=False)
     from_status_id = db.Column(db.Integer, db.ForeignKey('status.id'), nullable=False, index=True)
     to_status_id = db.Column(db.Integer, db.ForeignKey('status.id'), nullable=False, index=True)
     from_status = relationship("Status", foreign_keys=[from_status_id])
@@ -244,9 +284,10 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(60), index=True)
     last_name = db.Column(db.String(60), index=True)
     password_hash = db.Column(db.String(128))
+    confirmation_token = db.Column(db.String(120))
     telephone = db.Column(db.String(60), index=True, unique=True)
-    web = db.Column(db.String(120), index=True, unique=True)
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    company_confirmed = db.Column(db.Boolean, default=False)
     programme_code = db.Column(db.String(10), db.ForeignKey('programme.code'))
     profile_comment = db.Column(db.Text)
     is_admin = db.Column(db.Boolean, default=False)
@@ -260,6 +301,24 @@ class User(UserMixin, db.Model):
     skills_offered = db.relationship('SkillOffered', backref='user', lazy='joined')
     flags = db.relationship('Flag', backref='user', lazy='select')
     members = db.relationship('TeamMember', backref='user', lazy='select')
+
+    @staticmethod
+    def generate_token(source):
+        return pbkdf2_hex(source, 'email-confirmation', iterations=1000, keylen=20)
+
+    @property
+    def token(self):
+        raise AttributeError('token is not a readable attribute.')
+
+    @token.setter
+    def token(self, email):
+        self.confirmation_token = self.generate_token(email)
+
+    def verify_token(self, token):
+        if token == self.generate_token(self.email):
+            self.confirmation_token = None
+            return True
+        return False
 
     @property
     def password(self):

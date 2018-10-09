@@ -16,6 +16,7 @@
                 <tr>
                   <th width="15%"> From status </th>
                   <th width="15%"> To status </th>
+                  <th width="15%"> Admin only </th>
                   <th width="15%"> Edit </th>
                   <th width="15%"> Delete </th>
                 </tr>
@@ -25,6 +26,7 @@
                 <tr>
                   <td> {{ transition.from_status.domain.name }} {{ transition.from_status.name }} </td>
                   <td> {{ transition.to_status.domain.name }} {{ transition.to_status.name }} </td>
+                  <td> {{ transition.admin_only }} </td>
                   <td>
                     <a href="{{ url_for('admin.edit_transition', id=transition.id) }}">
                       <i class="fa fa-pencil"></i> Edit

@@ -1,11 +1,7 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
 {% block title %}
-    {% if add_company %}
-        Add Company
-    {% else %}
-        Edit Company
-    {% endif %}
+    Company Details
 {% endblock %}
 {% block content %}
 <div class="content-section">
@@ -13,11 +9,7 @@
     <div class="middle">
       <div class="inner">
         <div class="center">
-            {% if add_company %}
-                <h1>Add Company</h1>
-            {% else %}
-                <h1>Edit Company</h1>
-            {% endif %}
+            <h1>Company Details</h1>
             <br/>
             <form method='post' role='form'>
                 {% for field in form %}

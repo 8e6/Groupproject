@@ -27,7 +27,7 @@
               {% for faq in faqs %}
                 <tr>
                   <td> {{ faq.question }} </td>
-                  <td> {{ faq.answer }} </td>
+                  <td> {{ faq.answer[0:100] }}{% if faq.answer|length > 100 %}...{% endif %} </td>
                   <td> {{ faq.rank }} </td>
                   <td> {{ faq.external }} </td>
                   <td> {{ faq.student }} </td>
