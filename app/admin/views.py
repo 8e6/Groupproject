@@ -176,11 +176,38 @@ def add_company():
     form = CompanyForm()
     if form.validate_on_submit():
         company = Company(name=form.name.data,
-                          description=form.description.data,
-                          address=form.address.data,
-                          city=form.city.data,
-                          post_code=form.post_code.data
-                          )
+            description=form.description.data,
+            address=form.address.data,
+            city=form.city.data,
+            post_code=form.post_code.data,
+            web=form.web.data,
+            health_policy_flag=form.health_policy_flag.data,
+            health_policy_link=form.health_policy_link.data,
+            training_policy_flag=form.training_policy_flag.data,
+            training_policy_link=form.training_policy_link.data,
+            hse_registered=form.hse_registered.data,
+            la_registered=form.la_registered.data,
+            insured=form.insured.data,
+            student_insured=form.student_insured.data,
+            company_risk_assessed=form.company_risk_assessed.data,
+            risks_reviewed=form.risks_reviewed.data,
+            risks_mitigated=form.risks_mitigated.data,
+            accident_procedure_flag=form.accident_procedure_flag.data,
+            emergency_procedures_flag=form.emergency_procedures_flag.data,
+            report_student_accidents_flag=form.report_student_accidents_flag.data,
+            report_student_illness_flag=form.report_student_illness_flag.data,
+            data_policy_flag=form.data_policy_flag.data,
+            data_policy_link=form.data_policy_link.data,
+            security_measures_flag=form.security_measures_flag.data,
+            ico_registration_number=form.ico_registration_number.data,
+            data_training_flag=form.data_training_flag.data,
+            security_policy_flag=form.security_policy_flag.data,
+            security_policy_link=form.security_policy_link.data,
+            privacy_notice_flag=form.privacy_notice_flag.data,
+            data_contact_first_name=form.data_contact_first_name.data,
+            data_contact_last_name=form.data_contact_last_name.data,
+            data_contact_position=form.data_contact_position.data,
+            data_contact_telephone=form.data_contact_telephone.data)
 
         try:
             db.session.add(company)
@@ -201,27 +228,84 @@ def edit_company(id):
     check_admin()
     add_company = False
 
-    company = Company.query.get_or_404(id)
-    form = CompanyForm(obj=company)
-    if form.validate_on_submit():
-        company.id = form.id.data
-        company.name = form.name.data
-        company.description = form.description.data
-        company.address = form.address.data
-        company.city = form.city.data
-        company.post_code = form.post_code.data
-        db.session.add(company)
-        db.session.commit()
-        flash('You have successfully edited the company.')
+    try:
+        company = Company.query.get_or_404(id)
+        form = CompanyForm(obj=company)
+        if form.validate_on_submit():
+            company.name = form.name.data
+            company.description = form.description.data
+            company.address = form.address.data
+            company.city = form.city.data
+            company.post_code = form.post_code.data
+            company.web = form.web.data
+            company.health_policy_flag = form.health_policy_flag.data
+            company.health_policy_link = form.health_policy_link.data
+            company.training_policy_flag = form.training_policy_flag.data
+            company.training_policy_link = form.training_policy_link.data
+            company.hse_registered = form.hse_registered.data
+            company.la_registered = form.la_registered.data
+            company.insured = form.insured.data
+            company.student_insured = form.student_insured.data
+            company.company_risk_assessed = form.company_risk_assessed.data
+            company.risks_reviewed = form.risks_reviewed.data
+            company.risks_mitigated = form.risks_mitigated.data
+            company.accident_procedure_flag = form.accident_procedure_flag.data
+            company.emergency_procedures_flag = form.emergency_procedures_flag.data
+            company.report_student_accidents_flag = form.report_student_accidents_flag.data
+            company.report_student_illness_flag = form.report_student_illness_flag.data
+            company.data_policy_flag = form.data_policy_flag.data
+            company.data_policy_link = form.data_policy_link.data
+            company.security_measures_flag = form.security_measures_flag.data
+            company.ico_registration_number = form.ico_registration_number.data
+            company.data_training_flag = form.data_training_flag.data
+            company.security_policy_flag = form.security_policy_flag.data
+            company.security_policy_link = form.security_policy_link.data
+            company.privacy_notice_flag = form.privacy_notice_flag.data
+            company.data_contact_first_name = form.data_contact_first_name.data
+            company.data_contact_last_name = form.data_contact_last_name.data
+            company.data_contact_position = form.data_contact_position.data
+            company.data_contact_telephone = form.data_contact_telephone.data
+            db.session.add(company)
+            db.session.commit()
+            flash('You have successfully edited the company.')
 
-        return redirect(url_for('admin.list_companies'))
+            return redirect(url_for('admin.list_companies'))
+    except Exception as e:
+        flash(str(e), 'error')
 
-    form.name.id = company.id
     form.name.data = company.name
     form.description.data = company.description
     form.address.data = company.address
     form.city.data = company.city
     form.post_code.data = company.post_code
+    form.web.data = company.web
+    form.health_policy_flag.data = company.health_policy_flag
+    form.health_policy_link.data = company.health_policy_link
+    form.training_policy_flag.data = company.training_policy_flag
+    form.training_policy_link.data = company.training_policy_link
+    form.hse_registered.data = company.hse_registered
+    form.la_registered.data = company.la_registered
+    form.insured.data = company.insured
+    form.student_insured.data = company.student_insured
+    form.company_risk_assessed.data = company.company_risk_assessed
+    form.risks_reviewed.data = company.risks_reviewed
+    form.risks_mitigated.data = company.risks_mitigated
+    form.accident_procedure_flag.data = company.accident_procedure_flag
+    form.emergency_procedures_flag.data = company.emergency_procedures_flag
+    form.report_student_accidents_flag.data = company.report_student_accidents_flag
+    form.report_student_illness_flag.data = company.report_student_illness_flag
+    form.data_policy_flag.data = company.data_policy_flag
+    form.data_policy_link.data = company.data_policy_link
+    form.security_measures_flag.data = company.security_measures_flag
+    form.ico_registration_number.data = company.ico_registration_number
+    form.data_training_flag.data = company.data_training_flag
+    form.security_policy_flag.data = company.security_policy_flag
+    form.security_policy_link.data = company.security_policy_link
+    form.privacy_notice_flag.data = company.privacy_notice_flag
+    form.data_contact_first_name.data = company.data_contact_first_name
+    form.data_contact_last_name.data = company.data_contact_last_name
+    form.data_contact_position.data = company.data_contact_position
+    form.data_contact_telephone.data = company.data_contact_telephone
     return render_template('admin/companies/company.html', add_company=add_company,
                            form=form, title="Edit Company")
 
@@ -600,6 +684,8 @@ def update_settings():
         settings.last_notification_check=form.last_notification_check.data,
         settings.contact_name=form.contact_name.data,
         settings.contact_email=form.contact_email.data
+        settings.minimum_team_size=form.minimum_team_size.data
+        settings.maximum_team_size=form.maximum_team_size.data
 
         try:
             db.session.add(settings)
@@ -609,13 +695,6 @@ def update_settings():
             flash('Error: settings not updated.')
 
         return redirect(url_for('home.admin_dashboard'))
-
-    form.name.data = settings.name
-    form.subtitle.data = settings.subtitle
-    form.notification_period.data = settings.notification_period
-    form.last_notification_check.data = settings.last_notification_check
-    form.contact_name.data = settings.contact_name
-    form.contact_email.data = settings.contact_email
 
     return render_template('admin/settings/settings.html', form=form, title='Settings', all_jobs=all_jobs, running=running)
 
@@ -1010,6 +1089,22 @@ def confirm_user(id):
     db.session.add(user)
     db.session.commit()
     flash('Company confirmed for ' + user.first_name + ' ' + user.last_name)
+
+    users = User.query.filter(User.company_confirmed == 0).all()
+    return render_template('admin/users/user_confirmation.html',
+                           users=users,
+                           title='Confirm company')
+
+
+@admin.route('/delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def delete_user(id):
+    check_admin()
+
+    user = User.query.get_or_404(id)
+    db.session.delete(user)
+    db.session.commit()
+    flash(user.first_name + ' ' + user.last_name + ' deleted')
 
     users = User.query.filter(User.company_confirmed == 0).all()
     return render_template('admin/users/user_confirmation.html',

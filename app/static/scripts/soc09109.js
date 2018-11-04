@@ -1,6 +1,16 @@
 $(function () {
     $('[data-toggle="popover"]').popover()
-})
+});
+
+$("#skill-filter").on("change", function() {
+    var value = $("#skill-filter option:selected").text();
+    value = value.substr(0, value.indexOf('(')-1);
+    $(".card").filter(function() {
+        alert($(this).text().toLowerCase().replace(/(\r\n|\n|\r)/gm,"") + " - " + value);
+      $(this).toggle($(this).text().toLowerCase().replace(/(\r\n|\n|\r)/gm,"").indexOf(value.toLowerCase()) > -1)
+    });
+});
+
 $('[data-toggle=confirmation]').confirmation();
 $('[data-toggle=confirmation-singleton]').confirmation({ singleton: true });
 $('[data-toggle=confirmation-popout]').confirmation({ popout: true });
@@ -30,4 +40,39 @@ buttons: [
     icon: 'glyphicon glyphicon-time'
   }
 ]
+
+
 });
+
+/* Set the width of the side navigation to 250px */
+function openNav() {
+    document.getElementById("help").style.width = "350px";
+}
+
+/* Set the width of the side navigation to 0 */
+function closeNav() {
+    document.getElementById("help").style.width = "0";
+}
+
+/* Copy to clipboard : https://www.w3schools.com/howto/howto_js_copy_clipboard.asp */
+function copy_email_address() {
+    var email = document.querySelector('#email-address');
+    email.select();
+    document.execCommand("copy");
+
+    var node = document.createElement('DIV');
+    node.id = 'toast-99';
+    node.className = 'toast show toast-message';
+    var textnode = document.createTextNode('Email address copied to clipboard');
+    node.appendChild(textnode);
+    document.getElementById("logo").appendChild(node);
+
+    setTimeout(function(){
+        var toast = document.querySelector('#toast-99');
+        toast.parentNode.removeChild(toast);
+        }, 3000);
+
+    // <div id="toast-1" class="toast toast-error " role="alert">
+    //             Invalid email or password
+    //         </div>
+}

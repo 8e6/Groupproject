@@ -6,29 +6,34 @@
     <div class="outer">
         <div class="middle">
             <div class="inner">
-                <div class="center">
-                    <h1>Settings</h1>
-                    <br/>
-                    {{ wtf.quick_form(form) }}
-                    <br/>
-                    <br/>
-                    <h3>Background jobs</h3>
-                    {% for job in all_jobs %}
-                        {{ job }} is
-                        {%  if job in running %}
-                            running
-                        {%  else %}
-                            not running
-                        {% endif %}
-                        {%  if job in running %}
-                            <a href="{{url_for('admin.remove_scheduled_job', id=job) }}" class="btn btn-primary">Stop</a>
-                        {%  else %}
-                            <a href="{{url_for('admin.add_scheduled_job', id=job) }}" class="btn btn-primary">Start</a>
-                        {% endif %}
-                    {% endfor %}
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-8">
+                            <h1>Settings</h1>
+                            <br/>
+                            {{ wtf.quick_form(form) }}
+                        </div>
+                        <div class="col-sm-4">
+                            <h3 class="side-subsection">Background jobs</h3>
+                            {% for job in all_jobs %}
+                                {{ job }} is
+                                {%  if job in running %}
+                                    running
+                                {%  else %}
+                                    not running
+                                {% endif %}
+                                {%  if job in running %}
+                                    <a href="{{url_for('admin.remove_scheduled_job', id=job) }}" class="btn btn-default">Stop</a>
+                                {%  else %}
+                                    <a href="{{url_for('admin.add_scheduled_job', id=job) }}" class="btn btn-default">Start</a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% block footer %}{{  super() }}{% endblock footer%}
 {% endblock %}

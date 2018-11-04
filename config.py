@@ -14,6 +14,7 @@ class DevelopmentConfig(Config):
     logging.basicConfig()
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
+
 class ProductionConfig(Config):
     DEBUG = False
 

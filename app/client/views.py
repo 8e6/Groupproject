@@ -17,16 +17,24 @@ from ..models import *
 def profile():
     user = User.query.get(current_user.id)
     company_id = user.company_id
-    form = ProfileForm(obj=user)
-    form.company_id.choices = [(c.id, c.name) for c in Company.query.order_by(text('name'))]
-    form.company_id.data = user.company_id
+    if user.company.is_new:
+        form = ProfileFormWithCompany(obj=user)
+        form.company_id.choices = [(c.id, c.name) for c in Company.query.order_by(text('name'))]
+        form.company_id.data = user.company_id
+    else:
+        form = ProfileForm(obj=user)
+
     if form.validate_on_submit():
         user.email = form.email.data
         user.username = form.username.data
         user.first_name = form.first_name.data
         user.last_name = form.last_name.data
         user.telephone = form.telephone.data
-        user.company_id = form.company_id.raw_data[0]
+        user.display_name_flag = form.display_name_flag.data
+        user.display_email_flag = form.display_email_flag.data
+        user.display_phone_flag = form.display_phone_flag.data
+        if user.company.is_new:
+            user.company_id = form.company_id.raw_data[0]
         user.profile_comment = form.profile_comment.data
         if user.company_id != company_id:
             company = Company.query.get(company_id)
@@ -45,12 +53,16 @@ def profile():
     form.first_name.data = user.first_name
     form.last_name.data = user.last_name
     form.telephone.data = user.telephone
-    form.company_id.data = user.company_id
+    form.display_name_flag = user.display_name_flag
+    form.display_email_flag = user.display_email_flag
+    form.display_phone_flag = user.display_phone_flag
+    if user.company.is_new:
+        form.company_id.data = user.company_id
     form.profile_comment.data = user.profile_comment
     return render_template('client/profile/profile.html', user=user, form=form, title="Update profile")
 
 
-@client.route('/company')
+@client.route('/company', methods=['GET', 'POST'])
 @login_required
 def company():
     company = Company.query.filter(Company.id == current_user.company_id).first()
@@ -96,6 +108,11 @@ def company():
         flash('Company details updated')
 
         return redirect(url_for('home.dashboard'))
+
+    errors = form.errors
+    if len(errors) > 0:
+        for key, value in errors.items():
+            flash(value[0], 'error')
 
     if company.name != ' New company':
         form.name.data = company.name
@@ -203,24 +220,16 @@ def edit_project(id):
         project.academic_year = form.academic_year.data
         project.updated_date = datetime.datetime.now()
         db.session.add(project)
+        SkillRequired.query.filter(SkillRequired.project_id==project.id).delete()
         for skill in form.skills_required.raw_data:
             if skill not in [s.skill_id for s in project.skills_required]:
                 skill_required = SkillRequired(project_id=project.id, skill_id=skill)
                 db.session.add(skill_required)
-        for skill in project.skills_required:
-            if skill.skill_id not in form.skills_required.raw_data:
-                skill_required = SkillRequired.query.get(skill.id)
-                db.session.delete(skill_required)
         db.session.commit()
         flash('You have successfully edited the project.')
 
         return redirect(url_for('home.dashboard'))
 
-    form.title.data = project.title
-    form.overview.data = project.overview
-    form.deliverables.data = project.deliverables
-    form.resources.data = project.resources
-    form.academic_year.data = project.academic_year
     return render_template('client/projects/project.html', add_project=add_project,
                            project=project, form=form, title="Edit project")
 

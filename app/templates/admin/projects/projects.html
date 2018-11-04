@@ -35,9 +35,9 @@
                 <tr>
                   <td> {{ project.title }} </td>
                   <td> {{ project.client.company.name }} </td>
-                  <td> {{ project.overview }} </td>
-                  <td> {{ project.deliverables }} </td>
-                  <td> {{ project.resources }} </td>
+                  <td> {{ project.overview[0:100] }} </td>
+                  <td> {{ project.deliverables[0:100] }} </td>
+                  <td> {{ project.resources[0:100] }} </td>
                   <td> {% for skill in project.skills_required %}
                       {{ skill.skill_required.name }}<br/>
                       {%  endfor %}
@@ -66,9 +66,10 @@
                     </a>
                   </td>
                   <td>
-                    <a href="{{ url_for('admin.delete_project', id=project.id) }}">
-                      <i class="fa fa-trash"></i> Delete 
-                    </a>
+                    <a href="{{url_for('admin.delete_project', id=project.id) }}"
+                       data-toggle="confirmation"
+                       data-title="Are you sure?"
+                       class="btn btn-primary"><i class="fa fa-trash"></i> Delete</a>
                   </td>
                 </tr>
               {% endfor %}
@@ -89,8 +90,6 @@
       </div>
     </div>
   </div>
-    {% block footer %}
-        {{  super() }}
-    {% endblock footer%}
 </div>
+{% block footer %}{{  super() }}{% endblock footer%}
 {% endblock %}

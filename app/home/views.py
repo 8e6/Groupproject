@@ -1,6 +1,7 @@
 from flask import abort, render_template, flash, redirect, url_for, current_app
 from flask_login import current_user, login_required
 from flask_mail import Message, Mail
+import logging
 
 from app.models import *
 from . import home
@@ -12,6 +13,7 @@ def homepage():
     settings = Settings.query.first()
     return render_template('home/index.html', settings=settings, title="Welcome")
 
+
 @home.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
@@ -20,11 +22,23 @@ def admin_dashboard():
         abort(403)
 
     unconfirmed_companies = User.query.filter(User.company_confirmed == 0).all()
+    logged_in_users = User.query.filter(User.online_flag == True).all()
+    projects = Project.query.order_by(Project.title).all()
+    print(projects)
+    project_domain = Status.query.filter(Domain.name == 'project').first()
+    print(project_domain)
+    status_new = Status.query.filter(Status.domain_id == project_domain.id).first()
+    print(status_new)
+    new_projects = Project.query.filter(Project.status_id == status_new.id).all()
 
     return render_template('home/admin_dashboard.html',
                            title="Dashboard",
-                           unconfirmed_companies=unconfirmed_companies
+                           unconfirmed_companies=unconfirmed_companies,
+                           logged_in_users=logged_in_users,
+                           projects=projects,
+                           new_projects=new_projects
                            )
+
 
 @home.route('/dashboard')
 @login_required
@@ -35,12 +49,12 @@ def dashboard():
     return render_template('home/dashboard.html', projects=projects, transitions=transitions, title="Dashboard")
 
 
-@home.route('/faq')
+@home.route('/faq', methods=['GET', 'POST'])
 def faq():
     if current_user.is_authenticated:
         user = User.query.get(current_user.id)
         if user.is_admin:
-            faqs = Faq.query.all().order_by(Faq.rank.desc())
+            faqs = Faq.query.order_by(Faq.rank.desc()).all()
         elif user.is_external:
             faqs = Faq.query.filter(Faq.external == 1).order_by(Faq.rank.desc())
         else:
@@ -50,7 +64,8 @@ def faq():
 
     return render_template('home/faq.html', title="Frequently asked questions", faqs=faqs)
 
-@home.route('/contact')
+
+@home.route('/contact', methods=['GET', 'POST'])
 def contact():
     settings = Settings.query.first()
     form = ContactForm()
@@ -62,8 +77,7 @@ def contact():
                             ]
     if form.validate_on_submit():
         try:
-
-            msg = Message(subject="Project exchange " + form.category.data,
+            msg = Message(subject="Project exchange " + [x[1] for x in form.category.choices if x[0] == form.category.data][0],
                           body=form.message.data,
                           sender=form.email.data,
                           recipients=[settings.contact_email])
@@ -82,9 +96,10 @@ def contact():
             else:
                 return redirect(url_for('home.dashboard'))
         else:
-            return redirect(url_for('home.index'))
+            return redirect(url_for('home.homepage'))
 
     return render_template('home/contact.html', form=form, title='Contact')
+
 
 @home.route('/privacy')
 def privacy():

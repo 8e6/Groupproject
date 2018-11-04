@@ -34,35 +34,35 @@ class Company(db.Model):
     __tablename__ = 'company'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(60), unique=True)
+    name = db.Column(db.String(60))
     description = db.Column(db.String(200))
     address = db.Column(db.String(120), index=True)
     city = db.Column(db.String(60), index=True)
     post_code = db.Column(db.String(10))
     web = db.Column(db.String(120), index=True, unique=True)
-    health_policy_flag = db.Column(db.Boolean, default=False)             # Does the company have a written H&S policy?
+    health_policy_flag = db.Column(db.Boolean, nullable=True)             # Does the company have a written H&S policy?
     health_policy_link = db.Column(db.String(120))                        # Link to policy
-    training_policy_flag = db.Column(db.Boolean, default=False)           # Does the company have a H&S training policy?
+    training_policy_flag = db.Column(db.Boolean, nullable=True)           # Does the company have a H&S training policy?
     training_policy_link = db.Column(db.String(120))                      # Link to policy
-    hse_registered = db.Column(db.Boolean, default=False)                 # Is the company registered with HSE?
-    la_registered = db.Column(db.Boolean, default=False)                  # Is the company registered with local auth. environmental health dept?
-    insured = db.Column(db.Boolean, default=False)                        # Does the company have public liability insurance?
-    student_insured = db.Column(db.Boolean, default=False)                # Is the student covered by this policy?
-    company_risk_assessed = db.Column(db.Boolean, default=False)          # Has a company risk assessment been carried out?
-    risks_reviewed = db.Column(db.Boolean, default=False)                 # Are the risks reviewed regularly?
-    risks_mitigated = db.Column(db.Boolean, default=False)                # Are the risk assessment results implemented?
-    accident_procedure_flag = db.Column(db.Boolean, default=False)         # Is there a procedure for reporting accidents (RIDDOR)?
-    emergency_procedures_flag = db.Column(db.Boolean, default=False)      # Are emergency procedures in place?
-    report_student_accidents_flag = db.Column(db.Boolean, default=False)  # Will all accidents concerning students be reported to the University?
-    report_student_illness_flag = db.Column(db.Boolean, default=False)    # Will any student illness attributable to the work be reported to the University?
-    data_policy_flag = db.Column(db.Boolean, default=False)               # Is there a data protection policy?
+    hse_registered = db.Column(db.Boolean, nullable=True)                 # Is the company registered with HSE?
+    la_registered = db.Column(db.Boolean, nullable=True)                  # Is the company registered with local auth. environmental health dept?
+    insured = db.Column(db.Boolean, nullable=True)                        # Does the company have public liability insurance?
+    student_insured = db.Column(db.Boolean, nullable=True)                # Is the student covered by this policy?
+    company_risk_assessed = db.Column(db.Boolean, nullable=True)          # Has a company risk assessment been carried out?
+    risks_reviewed = db.Column(db.Boolean, nullable=True)                 # Are the risks reviewed regularly?
+    risks_mitigated = db.Column(db.Boolean, nullable=True)                # Are the risk assessment results implemented?
+    accident_procedure_flag = db.Column(db.Boolean, nullable=True)         # Is there a procedure for reporting accidents (RIDDOR)?
+    emergency_procedures_flag = db.Column(db.Boolean, nullable=True)      # Are emergency procedures in place?
+    report_student_accidents_flag = db.Column(db.Boolean, nullable=True)  # Will all accidents concerning students be reported to the University?
+    report_student_illness_flag = db.Column(db.Boolean, nullable=True)    # Will any student illness attributable to the work be reported to the University?
+    data_policy_flag = db.Column(db.Boolean, nullable=True)               # Is there a data protection policy?
     data_policy_link = db.Column(db.String(120))                          # Link to policy
-    security_measures_flag = db.Column(db.Boolean, default=False)         # Are data protection/privacy measures in place?
+    security_measures_flag = db.Column(db.Boolean, nullable=True)         # Are data protection/privacy measures in place?
     ico_registration_number = db.Column(db.String(20))                    # Registration No. with ICO
-    data_training_flag = db.Column(db.Boolean, default=False)             # Do staff receive regular data protection training?
-    security_policy_flag = db.Column(db.Boolean, default=False)           # Are information security policies in place?
+    data_training_flag = db.Column(db.Boolean, nullable=True)             # Do staff receive regular data protection training?
+    security_policy_flag = db.Column(db.Boolean, nullable=True)           # Are information security policies in place?
     security_policy_link = db.Column(db.String(120))                      # Link to policy
-    privacy_notice_flag = db.Column(db.Boolean, default=False)            # Is there a staff privacy notice that would cover the student?
+    privacy_notice_flag = db.Column(db.Boolean, nullable=True)            # Is there a staff privacy notice that would cover the student?
     data_contact_first_name = db.Column(db.String(30))
     data_contact_last_name = db.Column(db.String(30))
     data_contact_position = db.Column(db.String(30))
@@ -78,6 +78,12 @@ class Company(db.Model):
         null_attributes = [a for a in self.__dict__ if self.__getattribute__(a) is None]
 
         return (len(attributes) - len(null_attributes)) / len(attributes)
+
+    @property
+    def is_new(self):
+        if self.name == 'New Company':
+            return True
+        return False
 
 
 class Domain(db.Model):
@@ -176,6 +182,8 @@ class Settings(db.Model):
     last_notification_check = db.Column(db.DateTime, nullable=False)
     contact_name = db.Column(db.String(60))
     contact_email = db.Column(db.String(60))
+    minimum_team_size = db.Column(db.Integer, default=4)
+    maximum_team_size = db.Column(db.Integer, default=6)
 
 
 class Skill(db.Model):
@@ -287,6 +295,9 @@ class User(UserMixin, db.Model):
     confirmation_token = db.Column(db.String(120))
     telephone = db.Column(db.String(60), index=True, unique=True)
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    display_name_flag = db.Column(db.Boolean, default=False)
+    display_email_flag = db.Column(db.Boolean, default=False)
+    display_phone_flag = db.Column(db.Boolean, default=False)
     company_confirmed = db.Column(db.Boolean, default=False)
     programme_code = db.Column(db.String(10), db.ForeignKey('programme.code'))
     profile_comment = db.Column(db.Text)
@@ -295,6 +306,7 @@ class User(UserMixin, db.Model):
     notify_new = db.Column(db.Boolean, default=False)
     notify_interest = db.Column(db.Boolean, default=False)
     created_date = db.Column(db.DateTime, default=datetime.datetime.now)
+    online_flag = db.Column(db.Boolean, default=False)
     alerts = db.relationship('AlertQueue', backref='user', lazy='select')
     notes_of_interest = db.relationship('Interest', backref='user', lazy='select')
     projects_offered = db.relationship('Project', backref='client', lazy='joined')

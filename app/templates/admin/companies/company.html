@@ -42,6 +42,8 @@
                         <div class='short-horizontal'>
                             {{wtf.form_field(field)}}
                         </div>
+                    {% elif field.name == 'csrf_token' %}
+                        {{field}}
                     {% elif field.name != 'csrf_token' %}
                         {{wtf.form_field(field)}}
                     {% endif %}
@@ -52,4 +54,5 @@
     </div>
   </div>
 </div>
+{% block footer %}{{  super() }}{% endblock footer%}
 {% endblock %}

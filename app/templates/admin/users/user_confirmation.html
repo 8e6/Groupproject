@@ -17,9 +17,9 @@
                   <th width="20%"> Name </th>
                   <th width="10%"> Validated </th>
                   <th width="30%"> Company </th>
-                  <th width="20%"> Web </th>
+                  <th width="10%"> Web </th>
                   <th width="10%"> Profile complete </th>
-                  <th width="10%">  </th>
+                  <th width="20%">  </th>
                 </tr>
               </thead>
               <tbody>
@@ -56,12 +56,21 @@
                       </td>
                       <td>
                           {% if user.company %}
-                            <a class="btn btn-primary" role="button" href="{{ url_for('admin.confirm_user', id=user.id) }}">
-                                <span class="glyphicon glyphicon-ok-sign"></span> &nbsp; Confirm
+                            <a class="btn btn-primary confirm" role="button"
+                               href="{{ url_for('admin.confirm_user', id=user.id) }}"
+                               data-toggle="confirmation"
+                               data-title="Are you sure you want to confirm the company for this user?">
+                                <span class="glyphicon glyphicon-ok-sign"></span>
                             </a>
                           {% else %}
                               -
                           {% endif %}
+                            <a href="{{url_for('admin.delete_user',
+                               id=user.id) }}"
+                               data-toggle="confirmation"
+                               data-title="Are you sure you want to delete this user?"
+                               class="btn btn-primary delete">
+                               <span class="glyphicon glyphicon-remove-sign"></span></a>
                       </td>
                     </tr>
               {% endfor %}
@@ -74,4 +83,5 @@
     </div>
   </div>
 </div>
+{% block footer %}{{  super() }}{% endblock footer%}
 {% endblock %}
