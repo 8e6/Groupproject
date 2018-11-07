@@ -39,62 +39,94 @@
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav navbar-left">
                 {% if current_user.is_authenticated %}
+{# ----------------- ADMIN ---------------------#}
                     {% if current_user.is_admin %}
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('home.admin_dashboard') }}">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('home.admin_dashboard') }}">Dashboard</a></li>
+                          <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              Data maintenance
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                              <a class="dropdown-item" href="{{ url_for('admin.list_academic_years') }}">Academic years</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_companies') }}">Companies</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_domains') }}">Domains</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_faqs') }}">FAQs</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_flags') }}">Flags</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_programmes') }}">Programmes</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_projects') }}">Projects</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_skills') }}">Skills</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_statuses') }}">Statuses</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_teams') }}">Teams</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_transitions') }}">Transitions</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.list_users') }}">Users</a>
+                            </div>
+                          </li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.update_settings') }}">Settings</a></li>
+                      <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                       <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          Data maintenance
+                        <a class="nav-link dropdown-toggle" href="#" id="helpDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Help
                         </a>
-                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                          <a class="dropdown-item" href="{{ url_for('admin.list_academic_years') }}">Academic years</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_companies') }}">Companies</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_domains') }}">Domains</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_faqs') }}">FAQs</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_flags') }}">Flags</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_programmes') }}">Programmes</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_projects') }}">Projects</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_skills') }}">Skills</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_statuses') }}">Statuses</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_teams') }}">Teams</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_transitions') }}">Transitions</a>
-                          <a class="dropdown-item" href="{{ url_for('admin.list_users') }}">Users</a>
+                        <div class="dropdown-menu" aria-labelledby="helpDropdown">
+                            <a class="dropdown-item" href="{{ url_for('home.faq') }}">FAQ</a>
+                            <a class="dropdown-item" href="#" onclick="openNav();">Help on this page</a>
                         </div>
                       </li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.update_settings') }}">Settings</a></li>
+{# ----------------- CLIENT ---------------------#}
                   {% elif current_user.is_external %}
-                     <li class="nav-item"><a class="nav-link" href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
-                     <li class="nav-item"><a class="nav-link" href="{{ url_for('client.add_project') }}">New project</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('client.add_project') }}">New project</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              Profile
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="profileDropdown">
+                                {%  if current_user.is_external %}
+                                    <a class="dropdown-item" href="{{ url_for('client.profile') }}">Personal profile</a>
+                                    {% if current_user.company.employees | length == 1 or current_user.company_confirmed %}
+                                        <a class="dropdown-item" href="{{ url_for('client.company') }}">Company details</a>
+                                    {%  else %}
+                                        <span class="disabled"><a class="dropdown-item" href="#">Company details</a></span>
+                                    {% endif %}
+                                {% endif %}
+                                <a class="dropdown-item" href="{{ url_for('auth.password') }}">Change password</a>
+                            </div>
+                        </li>
+                      <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                      <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="helpDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Help
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="helpDropdown">
+                            <a class="dropdown-item" href="{{ url_for('home.faq') }}">FAQ</a>
+                            <a class="dropdown-item" href="#" onclick="openNav();">Help on this page</a>
+                        </div>
+                      </li>
+{# ----------------- STUDENT ---------------------#}
                   {% else %}
                      <li class="nav-item"><a class="nav-link" href="{{ url_for('student.dashboard') }}">Projects</a></li>
-                  {% endif %}
-                  <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      Profile
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="profileDropdown">
-                        {%  if current_user.is_external %}
-                            <a class="dropdown-item" href="{{ url_for('client.profile') }}">Personal profile</a>
-                            {% if current_user.company.employees | length == 1 or current_user.company_confirmed %}
-                                <a class="dropdown-item" href="{{ url_for('client.company') }}">Company details</a>
-                            {%  else %}
-                                <span class="disabled"><a class="dropdown-item" href="#">Company details</a></span>
-                            {% endif %}
-                        {% else %}
+                     <li class="nav-item"><a class="nav-link" href="{{ url_for('student.vacancies') }}">Vacancies</a></li>
+                      <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Profile
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="profileDropdown">
                             <a class="dropdown-item" href="{{ url_for('student.profile') }}">Personal profile</a>
-                        {% endif %}
-                        <a class="dropdown-item" href="{{ url_for('auth.password') }}">Change password</a>
-                    </div>
-                  </li>
-                  <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-                  <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="helpDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      Help
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="helpDropdown">
-                        <a class="dropdown-item" href="{{ url_for('home.faq') }}">FAQ</a>
-                        <a class="dropdown-item" href="#" onclick="openNav();">Help on this page</a>
-                    </div>
-                  </li>
+                            <a class="dropdown-item" href="{{ url_for('auth.password') }}">Change password</a>
+                        </div>
+                      </li>
+                      <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                      <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="helpDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Help
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="helpDropdown">
+                            <a class="dropdown-item" href="{{ url_for('home.faq') }}">FAQ</a>
+                            <a class="dropdown-item" href="#" onclick="openNav();">Help on this page</a>
+                        </div>
+                      </li>
+                  {% endif %}
+{# ----------------- PUBLIC ---------------------#}
                 {% else %}
                   <li><a href="{{ url_for('home.homepage') }}">Home</a></li>
                   <li><a href="{{ url_for('auth.register') }}">Register</a></li>

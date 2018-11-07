@@ -347,6 +347,12 @@ form #skills_required {
     text-decoration: none;
 }
 
+.right-control {
+    display: inline;
+    float: right;
+    padding-right: 20px;
+}
+
 #skill-filter {
     margin: 0px 20px 20px 0px;
 }
@@ -356,6 +362,23 @@ form #skills_required {
 
 .bids-badge {
     margin-left: 10px;
+}
+
+.team-table {
+    margin-bottom: 20px;
+}
+
+.team-table th {
+    min-width: 120px;
+}
+
+.team-table tr {
+    height: 40px;
+}
+
+.team-table tbody tr:last-child {
+    height: 100px;
+    vertical-align: bottom;
 }
 
 .yes-no .radio {

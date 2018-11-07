@@ -163,10 +163,10 @@ def edit_team(id):
     add_team = False
     settings = Settings.query.first()
 
-    form = TeamForm()
     team = Team.query.get(id)
-    form.comment.data = team.comment
-    form.vacancies.data = team.vacancies
+    form = TeamForm(obj=team)
+    # form.comment.data = team.comment
+    # form.vacancies.data = team.vacancies
 
     if form.validate_on_submit():
         team.comment=form.comment.data
@@ -178,8 +178,10 @@ def edit_team(id):
                 member = User.query.filter(User.username==form.matric.data)
                 team_member = TeamMember(user_id=member.id, team_id=team.id)
                 db.session.add(team_member)
-            except NoResultFound():
+            except NoResultFound:
                 flash('Matric number not recognised', 'error')
+            except AttributeError:
+                pass
 
         try:
             db.session.commit()
@@ -187,7 +189,7 @@ def edit_team(id):
         except:
             flash('There was a problem updating the team', 'error')
 
-        return redirect(url_for('student.edit_team', team.id))
+        return redirect(url_for('student.edit_team', id=team.id))
 
     return render_template('student/teams/team.html',
                            settings=settings,
@@ -285,5 +287,12 @@ def delete_flag(id):
     flash('Flag deleted')
 
     return redirect(url_for('.project', id=project_id))
+
+
+@student.route('/vacancies', methods=['GET', 'POST'])
+@login_required
+def vacancies():
+    teams = Team.query.filter(Team.vacancies != None).all()
+    return render_template('student/projects/vacancies.html', teams=teams, title="Vacancies")
 
 

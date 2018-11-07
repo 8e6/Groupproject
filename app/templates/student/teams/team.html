@@ -27,7 +27,7 @@
 
                     {% if not add_team %}
                         <h3>Team members</h3>
-                        <table>
+                        <table class="team-table table-striped">
                             <thead>
                             <tr><th>Matric</th><th>First name</th><th>Last name</th><th>Programme</th><th></th></tr>
                             </thead>
@@ -42,11 +42,11 @@
                                         <td>{{ member.user.username }}</td>
                                         <td>{{ member.user.first_name }}</td>
                                         <td>{{ member.user.last_name }}</td>
-                                        <td>{{ member.user.programme }}</td>
-                                        <td><a href="{{url_for('student.delete_member', team_id=team.id, id=member.id) }}"
+                                        <td>{{ member.user.programme.title }}</td>
+                                        <td><div class="right-control"><a href="{{url_for('student.delete_member', team_id=team.id, id=member.id) }}"
                                                data-toggle="confirmation"
                                                data-title="{{ confirm_message }}"
-                                            ><span class="action-glyph glyphicon glyphicon-remove-circle"></span></a></td>
+                                            ><span class="action-glyph glyphicon glyphicon-remove-circle"></span></a></div></td>
                                     </tr>
                                 {% endfor %}
                                 <tr>

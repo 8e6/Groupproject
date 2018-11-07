@@ -6,7 +6,14 @@ $("#skill-filter").on("change", function() {
     var value = $("#skill-filter option:selected").text();
     value = value.substr(0, value.indexOf('(')-1);
     $(".card").filter(function() {
-        alert($(this).text().toLowerCase().replace(/(\r\n|\n|\r)/gm,"") + " - " + value);
+      $(this).toggle($(this).text().toLowerCase().replace(/(\r\n|\n|\r)/gm,"").indexOf(value.toLowerCase()) > -1)
+    });
+});
+
+$("#company-filter").on("change", function() {
+    var value = $("#company-filter option:selected").text();
+    value = value.substr(0, value.indexOf('(')-1);
+    $(".card").filter(function() {
       $(this).toggle($(this).text().toLowerCase().replace(/(\r\n|\n|\r)/gm,"").indexOf(value.toLowerCase()) > -1)
     });
 });

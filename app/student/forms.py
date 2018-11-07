@@ -10,7 +10,7 @@ class ProfileForm(FlaskForm):
     last_name = StringField('Last name', render_kw={'disabled':''}, validators=[DataRequired()])
     profile_comment = TextAreaField('Profile comment')
     skills_offered = SelectMultipleField('Skills offered', coerce=int)
-    submit = SubmitField('Submit')
+    submit = SubmitField('Save')
 
 
 class FlagForm(FlaskForm):
