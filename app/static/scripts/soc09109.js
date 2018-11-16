@@ -1,5 +1,9 @@
 $(function () {
-    $('[data-toggle="popover"]').popover()
+    $('[data-toggle="popover"]').popover();
+});
+
+$('#email_form').submit(function() {
+    $('.overlay').show();
 });
 
 $("#skill-filter").on("change", function() {
@@ -16,6 +20,14 @@ $("#company-filter").on("change", function() {
     $(".card").filter(function() {
       $(this).toggle($(this).text().toLowerCase().replace(/(\r\n|\n|\r)/gm,"").indexOf(value.toLowerCase()) > -1)
     });
+});
+
+$(".project_status_select").on("change", function() {
+    str = String(location);
+    root = str.substr(0, str.lastIndexOf("/"));
+    endpoint = root + '/project/status/' + $(this).attr('data-project') + '/' + $(this).val();
+    // alert(endpoint);
+    location = endpoint;
 });
 
 $('[data-toggle=confirmation]').confirmation();
@@ -83,3 +95,4 @@ function copy_email_address() {
     //             Invalid email or password
     //         </div>
 }
+

@@ -5,7 +5,7 @@ from flask_mail import Message, Mail
 from . import auth
 from .forms import *
 from .. import db
-from ..models import User, Company
+from app.models import User, Company
 
 
 @auth.route('/register', methods=['GET', 'POST'])
@@ -13,7 +13,7 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         company = Company(
-            name=' New company',
+            name='New company',
             description='placeholder',
             address='placeholder',
             city='placeholder',
@@ -131,15 +131,15 @@ def password():
     if form.validate_on_submit():
         if user.verify_password(form.current.data):
             user.password=form.password.data
-            db.session.add(user)
             db.session.commit()
+
             flash('Password updated')
             if current_user.is_admin:
                 return redirect(url_for('home.admin_dashboard'))
             else:
                 return redirect(url_for('home.dashboard'))
         else:
-            flash('Incorrect current passwork entered', 'error')
+            flash('Incorrect current password entered', 'error')
 
     return render_template('auth/password.html', form=form, title='Change password')
 

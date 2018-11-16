@@ -1,9 +1,18 @@
 import re
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, DateField, IntegerField, BooleanField, TextAreaField, SelectField, SelectMultipleField, RadioField, Label
+from wtforms import StringField, \
+                    SubmitField, \
+                    DateField, \
+                    IntegerField, \
+                    FloatField, \
+                    BooleanField, \
+                    TextAreaField, \
+                    SelectField, \
+                    SelectMultipleField, \
+                    RadioField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.validators import DataRequired, Optional, ValidationError
-from ..models import Programme, Company
+from wtforms.validators import DataRequired, Optional, ValidationError, Email
+from app.models import Programme, Company
 
 
 class AcademicYearForm(FlaskForm):
@@ -54,6 +63,7 @@ class ProjectForm(FlaskForm):
     skills_required = SelectMultipleField('Skills required', coerce=int)
     academic_year = SelectField('Academic year')
     status_id = SelectField('Status', coerce=int)
+    admin_notes = TextAreaField('Notes')
     submit = SubmitField('Submit')
 
 
@@ -97,7 +107,7 @@ class CompanyForm(FlaskForm):
 class SettingsForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     subtitle = StringField('Subtitle', validators=[DataRequired()])
-    notification_period = IntegerField('Notification period', validators=[DataRequired()])
+    notification_period = FloatField('Notification period (hours)', validators=[DataRequired()])
     last_notification_check = DateField('Last notification check', validators=[DataRequired()])
     contact_name = StringField('Contact name', validators=[DataRequired()])
     contact_email = StringField('Contact email', validators=[DataRequired()])
@@ -144,3 +154,29 @@ class UserAssignForm(FlaskForm):
     company = QuerySelectField(query_factory=lambda: Company.query.all(), get_label="name")
     submit = SubmitField('Submit')
 
+
+class UserForm(FlaskForm):
+    id = IntegerField('ID', render_kw={'disabled':''}, validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    username = StringField('Usename', validators=[DataRequired()])
+    first_name = StringField('First name', validators=[DataRequired()])
+    last_name = StringField('Last name', validators=[DataRequired()])
+    confirmation_token = StringField('Confirmation token', render_kw={'disabled':''})
+    telephone = StringField('Telephone')
+    company = StringField('Company')
+    company_confirmed = StringField('Confirmed flag', render_kw={'disabled':''})
+    programme_code = SelectField('Programme code')
+    profile_comment = TextAreaField('Profile comment')
+    is_admin = BooleanField('Admin')
+    is_external = BooleanField('External')
+    display_name_flag = BooleanField('Display name')
+    display_email_flag = BooleanField('Display email')
+    display_phone_flag = BooleanField('Display phone')
+    online_flag = BooleanField('Online flag')
+    submit = SubmitField('Submit')
+
+
+class EmailForm(FlaskForm):
+    subject = StringField('Subject', validators=[DataRequired()])
+    message = TextAreaField('Message', validators=[DataRequired()])
+    submit = SubmitField('Send')

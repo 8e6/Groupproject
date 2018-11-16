@@ -1,14 +1,15 @@
-from flask import abort, flash, redirect, render_template, url_for
+from flask import abort, flash, redirect, render_template, url_for, current_app
 from flask_login import current_user, login_required
+from flask_mail import Message, Mail
 from sqlalchemy.sql import text
 
 from . import admin
 from .forms import *
-from .. import db
-from .. import scheduler
-from .. import jobs
-from ..models import *
-from ..scheduled_jobs import Jobs
+from app import scheduler
+from app.models import *
+from app.scheduled_jobs import Jobs
+
+jobs = Jobs()
 
 def check_admin():
     if not current_user.is_admin:
@@ -558,7 +559,10 @@ def delete_flag(id):
 def list_projects():
     check_admin()
     projects = Project.query.all()
-    return render_template('admin/projects/projects.html', projects=projects, title='Projects')
+    domain = Domain.query.filter(Domain.name == 'project').first()
+    statuses = Status.query.filter(Status.domain_id == domain.id).all()
+    transitions = Transition.query.filter(Transition.to_status_id.in_([s.id for s in statuses])).all()
+    return render_template('admin/projects/projects.html', projects=projects, transitions=transitions, title='Projects')
 
 
 @admin.route('/projects/add', methods=['GET', 'POST'])
@@ -627,7 +631,8 @@ def edit_project(id):
         project.resources = form.resources.data
         project.academic_year = form.academic_year.data
         project.status_id = form.status_id.data
-        project.updated_date = datetime.datetime.now()
+        project.admin_notes = form.admin_notes.data
+        project.updated_date = datetime.now()
         db.session.add(project)
         for skill in form.skills_required.raw_data:
             if skill not in [s.skill_id for s in project.skills_required]:
@@ -642,15 +647,22 @@ def edit_project(id):
 
         return redirect(url_for('admin.list_projects'))
 
-    form.title.data = project.title
-    form.client_id.data = project.client_id
-    form.overview.data = project.overview
-    form.deliverables.data = project.deliverables
-    form.resources.data = project.resources
-    form.academic_year.data = project.academic_year
-    form.status_id.data = project.status_id
     return render_template('admin/projects/project.html', add_project=add_project,
                            project=project, form=form, title="Edit project")
+
+
+
+@admin.route('/projects/clear/<int:id>', methods=['GET', 'POST'])
+@login_required
+def clear_notes(id):
+    check_admin()
+
+    project = Project.query.get_or_404(id)
+    project.admin_notes = None
+    db.session.commit()
+    flash('Notes cleared')
+
+    return redirect(url_for('admin.list_projects'))
 
 
 @admin.route('/projects/delete/<int:id>', methods=['GET', 'POST'])
@@ -664,6 +676,21 @@ def delete_project(id):
     flash('You have successfully deleted the project.')
 
     return redirect(url_for('admin.list_projects'))
+
+
+@admin.route('/project/status/<int:id>/<status_id>', methods=['GET', 'POST'])
+@login_required
+def project_status(id, status_id):
+    check_admin()
+
+    project = Project.query.get_or_404(id)
+    project.status_id = status_id
+    db.session.add(project)
+    db.session.commit()
+    flash('Project status updated')
+
+    return redirect(url_for('admin.list_projects'))
+
 
 
 #--------  Settings views ----------#
@@ -700,7 +727,12 @@ def update_settings():
 
 @admin.route('/add/<id>')
 def add_scheduled_job(id):
-    scheduler.add_job(func=eval('jobs.' + id), trigger="interval", seconds=3, id=id)
+    settings = Settings.query.first()
+    period = 10
+    if id == 'notify':
+        period = settings.notification_period * 3600
+
+    scheduler.add_job(func=eval('jobs.' + id), trigger="interval", seconds=period, id=id)
     flash(id + ' has been successfully started as a background job')
     return redirect(url_for('admin.update_settings'))
 
@@ -730,7 +762,8 @@ def add_skill():
 
     form = SkillForm()
     if form.validate_on_submit():
-        skill = Skill(name = form.name.data, description = form.domain_id.data)
+        skill = Skill(name = form.name.data,
+                      description = form.description.data)
 
         try:
             db.session.add(skill)
@@ -941,7 +974,7 @@ def edit_team(id):
         team.comment = form.comment.data
         team.vacancies = form.vacancies.data
         team.status_id = form.status_id.data
-        team.updated_date = datetime.datetime.now()
+        team.updated_date = datetime.now()
         db.session.add(team)
         for member in form.members.raw_data:
             if member not in [m.user_id for m in team.members]:
@@ -1061,11 +1094,29 @@ def delete_transition(id):
 
 @admin.route('/users')
 @login_required
-def list_users():
+def users():
     check_admin()
 
     users = User.query.all()
     return render_template('admin/users/users.html', users=users, title='Users')
+
+
+@admin.route('/students')
+@login_required
+def students():
+    check_admin()
+
+    users = User.query.filter(User.programme_code != None).all()
+    return render_template('admin/users/users.html', users=users, title='Students')
+
+
+@admin.route('/clients')
+@login_required
+def clients():
+    check_admin()
+
+    users = User.query.filter(User.is_external == True).all()
+    return render_template('admin/users/users.html', users=users, title='Clients')
 
 
 @admin.route('/users/confirm', methods=['GET', 'POST'])
@@ -1077,6 +1128,39 @@ def confirm_users():
     return render_template('admin/users/user_confirmation.html',
                            users=users,
                            title='Confirm company')
+
+
+@admin.route('/user/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(id):
+    check_admin()
+    add_user = False
+
+    user = User.query.get_or_404(id)
+    form = UserForm(obj=user)
+    programmes = Programme.query.all()
+    form.programme_code.choices = [(p.code, p.title) for p in programmes]
+    if form.validate_on_submit():
+        user.email = form.email.data
+        user.username = form.username.data
+        user.first_name = form.first_name.data
+        user.last_name = form.last_name.data
+        user.telephone = form.telephone.data
+        user.programme_code = form.programme_code.raw_data[0]
+        user.profile_comment = form.profile_comment.data
+        user.is_admin = form.is_admin.data
+        user.is_external = form.is_external.data
+        user.display_name_flag = form.display_name_flag.data
+        user.display_email_flag = form.display_email_flag.data
+        user.display_phone_flag = form.display_phone_flag.data
+        db.session.commit()
+
+        flash('User updated')
+
+        return redirect(url_for('admin.users'))
+
+    return render_template('admin/users/user.html', add_user=add_user,
+                           user=user, form=form, title="Edit user")
 
 
 @admin.route('/confirm/<int:id>', methods=['GET', 'POST'])
@@ -1135,4 +1219,63 @@ def assign_user(id):
     return render_template('admin/users/user.html',
                            user=user, form=form,
                            title='Assign User')
+
+
+@admin.route('/email/<return_url>/<int:id>', methods=['GET', 'POST'])
+@admin.route('/email/<return_url>/<int:id>/<int:return_id>', methods=['GET', 'POST'])
+@login_required
+def email(return_url, id, return_id=None):
+    check_admin()
+    user = User.query.get_or_404(id)
+
+    form = EmailForm(obj=user)
+    if form.validate_on_submit():
+        msg = Message(subject=form.subject.data,
+                      body=form.message.data,
+                      sender=current_user.email,
+                      cc=[current_user.email],
+                      recipients=[user.email])
+        mail = Mail(current_app)
+        mail.send(msg)
+
+        flash('Email sent')
+
+        if return_id:
+            return redirect(url_for(return_url, id=return_id))
+        else:
+            return redirect(url_for(return_url))
+
+    return render_template('admin/users/email.html',
+                           user=user, form=form,
+                           title='Email')
+
+
+@admin.route('/team_email/<return_url>/<int:id>', methods=['GET', 'POST'])
+@admin.route('/team_email/<return_url>/<int:id>/<int:return_id>', methods=['GET', 'POST'])
+@login_required
+def team_email(return_url, id, return_id=None):
+    check_admin()
+    members = TeamMember.query.filter(TeamMember.team_id == id).all()
+
+    form = EmailForm()
+    if form.validate_on_submit():
+        msg = Message(subject=form.subject.data,
+                      body=form.message.data,
+                      sender=current_user.email,
+                      cc=[current_user.email],
+                      recipients=[u.id for u in members])
+        mail = Mail(current_app)
+        mail.send(msg)
+
+        flash('Email sent')
+
+        if return_id:
+            return redirect(url_for(return_url, id=return_id))
+        else:
+            return redirect(url_for(return_url))
+
+    return render_template('admin/users/team_email.html',
+                           members=members, form=form,
+                           title='Email')
+
 

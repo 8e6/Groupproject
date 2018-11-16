@@ -1,5 +1,6 @@
 {% import "bootstrap/utils.html" as utils %}
 {% extends "base.html" %}
+{% import 'macros.html' as m %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <div class="content-section">
@@ -46,23 +47,20 @@
                                         <br/><br/>
 
                                         {% if project.status.name != 'Complete' %}
-                                            {% if project.teams %}
+                                            {% if project.bids > 0 %}
                                                 <button type="button" class="btn btn-default">
-                                                    Bids <span class="bids-badge badge badge-light">{{ project.teams|length }}</span>
+                                                    Bids <span class="badge badge-info">{{ project.bids }}</span>
                                                 </button>
                                             {% else %}
                                                 <button type="button" class="btn btn-default disabled">
-                                                    Bids <span class="badge badge-light">0</span>
+                                                    Bids</span>
                                                 </button>
                                             {% endif %}
                                             <a href="{{url_for('client.edit_project', id=project.id) }}" class="btn btn-default">Edit</a>
                                         {% endif %}
                                         {% for transition in transitions %}
                                             {% if transition.from_status_id == project.status_id %}
-                                                <a href="{{url_for('client.transition', id=project.id, status_id=transition.to_status_id) }}"
-                                                   data-toggle="confirmation"
-                                                   data-title="Are you sure?"
-                                                   class="btn btn-default">{{transition.to_status.action_text}}</a>
+                                                {{ m.status('project', 'client.transition', project.id, transition)}}
                                             {% endif %}
                                         {% endfor %}
                                 </div>

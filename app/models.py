@@ -1,9 +1,10 @@
-import datetime
+from datetime import datetime
 from flask_login import UserMixin
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash, pbkdf2_hex
 
-from app import db, login_manager
+from app import login_manager
+from app import db
 
 
 class AcademicYear(db.Model):
@@ -35,15 +36,15 @@ class Company(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(60))
-    description = db.Column(db.String(200))
-    address = db.Column(db.String(120), index=True)
+    description = db.Column(db.Text)
+    address = db.Column(db.String(255), index=True)
     city = db.Column(db.String(60), index=True)
     post_code = db.Column(db.String(10))
-    web = db.Column(db.String(120), index=True, unique=True)
+    web = db.Column(db.String(255), index=True, unique=True)
     health_policy_flag = db.Column(db.Boolean, nullable=True)             # Does the company have a written H&S policy?
-    health_policy_link = db.Column(db.String(120))                        # Link to policy
+    health_policy_link = db.Column(db.String(255))                        # Link to policy
     training_policy_flag = db.Column(db.Boolean, nullable=True)           # Does the company have a H&S training policy?
-    training_policy_link = db.Column(db.String(120))                      # Link to policy
+    training_policy_link = db.Column(db.String(255))                      # Link to policy
     hse_registered = db.Column(db.Boolean, nullable=True)                 # Is the company registered with HSE?
     la_registered = db.Column(db.Boolean, nullable=True)                  # Is the company registered with local auth. environmental health dept?
     insured = db.Column(db.Boolean, nullable=True)                        # Does the company have public liability insurance?
@@ -56,16 +57,16 @@ class Company(db.Model):
     report_student_accidents_flag = db.Column(db.Boolean, nullable=True)  # Will all accidents concerning students be reported to the University?
     report_student_illness_flag = db.Column(db.Boolean, nullable=True)    # Will any student illness attributable to the work be reported to the University?
     data_policy_flag = db.Column(db.Boolean, nullable=True)               # Is there a data protection policy?
-    data_policy_link = db.Column(db.String(120))                          # Link to policy
+    data_policy_link = db.Column(db.String(255))                          # Link to policy
     security_measures_flag = db.Column(db.Boolean, nullable=True)         # Are data protection/privacy measures in place?
     ico_registration_number = db.Column(db.String(20))                    # Registration No. with ICO
     data_training_flag = db.Column(db.Boolean, nullable=True)             # Do staff receive regular data protection training?
     security_policy_flag = db.Column(db.Boolean, nullable=True)           # Are information security policies in place?
-    security_policy_link = db.Column(db.String(120))                      # Link to policy
+    security_policy_link = db.Column(db.String(255))                      # Link to policy
     privacy_notice_flag = db.Column(db.Boolean, nullable=True)            # Is there a staff privacy notice that would cover the student?
     data_contact_first_name = db.Column(db.String(30))
-    data_contact_last_name = db.Column(db.String(30))
-    data_contact_position = db.Column(db.String(30))
+    data_contact_last_name = db.Column(db.String(50))
+    data_contact_position = db.Column(db.String(255))
     data_contact_telephone = db.Column(db.String(30))
     employees = db.relationship('User', backref='company', lazy='joined')
 
@@ -81,7 +82,7 @@ class Company(db.Model):
 
     @property
     def is_new(self):
-        if self.name == 'New Company':
+        if self.name == 'New company':
             return True
         return False
 
@@ -130,7 +131,7 @@ class Interest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    created_date = db.Column(db.DateTime, default=datetime.datetime.now)
+    created_date = db.Column(db.DateTime, default=datetime.now)
 
     def __repr__(self):
         return '<Interest: {} {}, {}>'.format(self.user.first_name, self.user.last_name, self.project.title)
@@ -153,21 +154,30 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    created_date = db.Column(db.DateTime, default=datetime.datetime.now)
-    updated_date = db.Column(db.DateTime, default=datetime.datetime.now)
+    created_date = db.Column(db.DateTime, default=datetime.now)
+    updated_date = db.Column(db.DateTime, default=datetime.now)
     academic_year = db.Column(db.String(7), db.ForeignKey('academic_year.year'), nullable=False, index=True)
     overview = db.Column(db.Text)
     deliverables = db.Column(db.Text)
     resources = db.Column(db.Text)
     status_id = db.Column(db.Integer, db.ForeignKey('status.id'), nullable=False, index=True)
+    admin_notes = db.Column(db.Text)
     flags = db.relationship('Flag', backref='project', lazy='joined', cascade="all, delete", passive_deletes=True)
     notes_of_interest = db.relationship('Interest', backref='project', lazy='joined', cascade="all, delete", passive_deletes=True)
     skills_required = db.relationship('SkillRequired', backref='project', lazy='joined', cascade="all, delete", passive_deletes=True)
     teams = db.relationship('Team', backref='project', lazy='select', cascade="all, delete", passive_deletes=True)
 
     @property
-    def status(self):
-        return
+    def display_overview(self):
+        return "<br />".join(self.overview.split("\n"))
+
+    @property
+    def display_deliverables(self):
+        return "<br />".join(self.deliverables.split("\n"))
+
+    @property
+    def display_resources(self):
+        return "<br />".join(self.resources.split("\n"))
 
     def __repr__(self):
         return '<Project: {}>'.format(self.title)
@@ -178,7 +188,7 @@ class Settings(db.Model):
 
     name = db.Column(db.String(60), primary_key=True)
     subtitle = db.Column(db.String(120))
-    notification_period = db.Column(db.Integer, nullable=False, default=4)
+    notification_period = db.Column(db.Float, nullable=False, default=4.0)
     last_notification_check = db.Column(db.DateTime, nullable=False)
     contact_name = db.Column(db.String(60))
     contact_email = db.Column(db.String(60))
@@ -260,8 +270,8 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id', ondelete='CASCADE'), nullable=False, index=True)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    created_date = db.Column(db.DateTime, default=datetime.datetime.now)
-    updated_date = db.Column(db.DateTime, default=datetime.datetime.now)
+    created_date = db.Column(db.DateTime, default=datetime.now)
+    updated_date = db.Column(db.DateTime, default=datetime.now)
     status_id = db.Column(db.Integer, db.ForeignKey('status.id'), nullable=False, index=True)
     comment = db.Column(db.Text)
     vacancies = db.Column(db.Text)
@@ -277,7 +287,7 @@ class TeamMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     team_id = db.Column(db.Integer, db.ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
-    created_date = db.Column(db.DateTime, default=datetime.datetime.now)
+    created_date = db.Column(db.DateTime, default=datetime.now)
 
     def __repr__(self):
         return '<Team member: {} {} in team {:d}>'.format(self.user.first_name, self.user.last_name, self.id)
@@ -305,7 +315,7 @@ class User(UserMixin, db.Model):
     is_external = db.Column(db.Boolean, default=True)
     notify_new = db.Column(db.Boolean, default=False)
     notify_interest = db.Column(db.Boolean, default=False)
-    created_date = db.Column(db.DateTime, default=datetime.datetime.now)
+    created_date = db.Column(db.DateTime, default=datetime.now)
     online_flag = db.Column(db.Boolean, default=False)
     alerts = db.relationship('AlertQueue', backref='user', lazy='select')
     notes_of_interest = db.relationship('Interest', backref='user', lazy='select')
@@ -313,6 +323,12 @@ class User(UserMixin, db.Model):
     skills_offered = db.relationship('SkillOffered', backref='user', lazy='joined')
     flags = db.relationship('Flag', backref='user', lazy='select')
     members = db.relationship('TeamMember', backref='user', lazy='select')
+
+    @property
+    def is_student(self):
+        if 'live.napier.ac.uk' in self.email:
+            return True
+        return False
 
     @staticmethod
     def generate_token(source):

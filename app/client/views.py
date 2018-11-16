@@ -1,13 +1,10 @@
-from copy import copy
-
-from flask import abort, flash, redirect, render_template, url_for
+from flask import flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
 from sqlalchemy.sql import text
 
 from . import client
 from .forms import *
-from .. import db
-from ..models import *
+from app.models import *
 
 
 #--------  Profile views ----------#
@@ -17,9 +14,12 @@ from ..models import *
 def profile():
     user = User.query.get(current_user.id)
     company_id = user.company_id
-    if user.company.is_new:
+    new_company = user.company.is_new
+    if new_company:
         form = ProfileFormWithCompany(obj=user)
-        form.company_id.choices = [(c.id, c.name) for c in Company.query.order_by(text('name'))]
+        form.company_id.choices = [(user.company_id, user.company.name)] +\
+                                  [(c.id, c.name) for c in Company.query.order_by(text('name')) if c.name != user.company.name]
+
         form.company_id.data = user.company_id
     else:
         form = ProfileForm(obj=user)
@@ -33,13 +33,15 @@ def profile():
         user.display_name_flag = form.display_name_flag.data
         user.display_email_flag = form.display_email_flag.data
         user.display_phone_flag = form.display_phone_flag.data
-        if user.company.is_new:
-            user.company_id = form.company_id.raw_data[0]
+        user.company_id = form.company_id.raw_data[0]
         user.profile_comment = form.profile_comment.data
-        if user.company_id != company_id:
+        db.session.commit()
+
+        if user.company_id != company_id and new_company:
+            db.session.expire_all()
             company = Company.query.get(company_id)
             db.session.delete(company)
-        db.session.commit()
+            db.session.commit()
         flash('Profile updated')
         return redirect(url_for('home.dashboard'))
 
@@ -66,8 +68,8 @@ def profile():
 @login_required
 def company():
     company = Company.query.filter(Company.id == current_user.company_id).first()
+    form = CompanyForm(obj=company)
 
-    form = CompanyForm()
     if form.validate_on_submit():
         company.name = form.name.data
         company.description = form.description.data
@@ -114,40 +116,40 @@ def company():
         for key, value in errors.items():
             flash(value[0], 'error')
 
-    if company.name != ' New company':
-        form.name.data = company.name
-        form.description.data = company.description
-        form.address.data = company.address
-        form.city.data = company.city
-        form.post_code.data = company.post_code
-        form.web.data = company.web
-        form.health_policy_flag.data = company.health_policy_flag
-        form.health_policy_link.data = company.health_policy_link
-        form.training_policy_flag.data = company.training_policy_flag
-        form.training_policy_link.data = company.training_policy_link
-        form.hse_registered.data = company.hse_registered
-        form.la_registered.data = company.la_registered
-        form.insured.data = company.insured
-        form.student_insured.data = company.student_insured
-        form.company_risk_assessed.data = company.company_risk_assessed
-        form.risks_reviewed.data = company.risks_reviewed
-        form.risks_mitigated.data = company.risks_mitigated
-        form.accident_procedure_flag.data = company.accident_procedure_flag
-        form.emergency_procedures_flag.data = company.emergency_procedures_flag
-        form.report_student_accidents_flag.data = company.report_student_accidents_flag
-        form.report_student_illness_flag.data = company.report_student_illness_flag
-        form.data_policy_flag.data = company.data_policy_flag
-        form.data_policy_link.data = company.data_policy_link
-        form.security_measures_flag.data = company.security_measures_flag
-        form.ico_registration_number.data = company.ico_registration_number
-        form.data_training_flag.data = company.data_training_flag
-        form.security_policy_flag.data = company.security_policy_flag
-        form.security_policy_link.data = company.security_policy_link
-        form.privacy_notice_flag.data = company.privacy_notice_flag
-        form.data_contact_first_name.data = company.data_contact_first_name
-        form.data_contact_last_name.data = company.data_contact_last_name
-        form.data_contact_position.data = company.data_contact_position
-        form.data_contact_telephone.data = company.data_contact_telephone
+    # if company.name != ' New company':
+    #     form.name.data = company.name
+    #     form.description.data = company.description
+    #     form.address.data = company.address
+    #     form.city.data = company.city
+    #     form.post_code.data = company.post_code
+    #     form.web.data = company.web
+    #     form.health_policy_flag.data = company.health_policy_flag
+    #     form.health_policy_link.data = company.health_policy_link
+    #     form.training_policy_flag.data = company.training_policy_flag
+    #     form.training_policy_link.data = company.training_policy_link
+    #     form.hse_registered.data = company.hse_registered
+    #     form.la_registered.data = company.la_registered
+    #     form.insured.data = company.insured
+    #     form.student_insured.data = company.student_insured
+    #     form.company_risk_assessed.data = company.company_risk_assessed
+    #     form.risks_reviewed.data = company.risks_reviewed
+    #     form.risks_mitigated.data = company.risks_mitigated
+    #     form.accident_procedure_flag.data = company.accident_procedure_flag
+    #     form.emergency_procedures_flag.data = company.emergency_procedures_flag
+    #     form.report_student_accidents_flag.data = company.report_student_accidents_flag
+    #     form.report_student_illness_flag.data = company.report_student_illness_flag
+    #     form.data_policy_flag.data = company.data_policy_flag
+    #     form.data_policy_link.data = company.data_policy_link
+    #     form.security_measures_flag.data = company.security_measures_flag
+    #     form.ico_registration_number.data = company.ico_registration_number
+    #     form.data_training_flag.data = company.data_training_flag
+    #     form.security_policy_flag.data = company.security_policy_flag
+    #     form.security_policy_link.data = company.security_policy_link
+    #     form.privacy_notice_flag.data = company.privacy_notice_flag
+    #     form.data_contact_first_name.data = company.data_contact_first_name
+    #     form.data_contact_last_name.data = company.data_contact_last_name
+    #     form.data_contact_position.data = company.data_contact_position
+    #     form.data_contact_telephone.data = company.data_contact_telephone
 
     return render_template('client/profile/company.html',
                            company=company, form=form, title="Update company details")
@@ -218,7 +220,7 @@ def edit_project(id):
         project.deliverables = form.deliverables.data
         project.resources = form.resources.data
         project.academic_year = form.academic_year.data
-        project.updated_date = datetime.datetime.now()
+        project.updated_date = datetime.now()
         db.session.add(project)
         SkillRequired.query.filter(SkillRequired.project_id==project.id).delete()
         for skill in form.skills_required.raw_data:

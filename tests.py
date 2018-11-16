@@ -1,8 +1,7 @@
 import unittest
 from flask_testing import TestCase
-import os
 from flask import abort, url_for
-from app.models import Programme, User, Company
+from app.models import Programme, Company
 
 from app import create_app, db
 from app.models import User
@@ -51,6 +50,12 @@ class TestModels(TestBase):
         db.session.add(company)
         db.session.commit()
         self.assertEqual(Company.query.count(), 1)
+        self.assertFalse(company.is_new)
+        company = Company(name="New company", description="placeholder", address="placeholder", city="placeholder", post_code="placehldr")
+        db.session.add(company)
+        db.session.commit()
+        self.assertEqual(Company.query.count(), 2)
+        self.assertTrue(company.is_new)
 
 
 class TestViews(TestBase):

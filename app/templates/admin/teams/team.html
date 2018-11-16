@@ -1,5 +1,6 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
+{% import 'macros.html' as m %}
 {% block title %}
     {% if add_team %}
         Add Team
@@ -19,6 +20,7 @@
                     <h1>Add Team</h1>
                 {% else %}
                     <h1>Edit Team</h1>
+                    {{ m.team_email('admin.edit_team', team.id, team.id) }}
                 {% endif %}
                 <br/>
                 {{ wtf.quick_form(form) }}

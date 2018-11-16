@@ -1,11 +1,10 @@
 from flask import abort, render_template, flash, redirect, url_for, current_app
 from flask_login import current_user, login_required
 from flask_mail import Message, Mail
-import logging
 
-from app.models import *
 from . import home
 from .forms import *
+from app.models import *
 
 
 @home.route('/')
@@ -44,6 +43,10 @@ def admin_dashboard():
 @login_required
 def dashboard():
     projects = Project.query.filter(Project.client_id == current_user.id).all()
+    settings = Settings.query.first()
+    for project in projects:
+        # project.bids = len([t.id for t in project.teams if len(t.members) >= 1 ])
+        project.bids = len([t.id for t in project.teams if len(t.members) >= settings.minimum_team_size ])
     from_statuses = [p.status_id for p in projects]
     transitions = Transition.query.filter(Transition.from_status_id.in_(from_statuses), Transition.admin_only == False).all()
     return render_template('home/dashboard.html', projects=projects, transitions=transitions, title="Dashboard")

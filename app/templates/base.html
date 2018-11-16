@@ -10,6 +10,7 @@
 {% block styles %}
     {{super()}}
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/style.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/clock.css')}}">
 {% endblock %}
 
 {% block scripts %}
@@ -39,7 +40,7 @@
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav navbar-left">
                 {% if current_user.is_authenticated %}
-{# ----------------- ADMIN ---------------------#}
+{# ----------------- ADMIN MENU ---------------------#}
                     {% if current_user.is_admin %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('home.admin_dashboard') }}">Dashboard</a></li>
                           <li class="nav-item dropdown">
@@ -58,10 +59,21 @@
                               <a class="dropdown-item" href="{{ url_for('admin.list_statuses') }}">Statuses</a>
                               <a class="dropdown-item" href="{{ url_for('admin.list_teams') }}">Teams</a>
                               <a class="dropdown-item" href="{{ url_for('admin.list_transitions') }}">Transitions</a>
-                              <a class="dropdown-item" href="{{ url_for('admin.list_users') }}">Users</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.users') }}">Users</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.students') }}">Students</a>
+                              <a class="dropdown-item" href="{{ url_for('admin.clients') }}">Clients</a>
                             </div>
                           </li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.update_settings') }}">Settings</a></li>
+                      <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Profile
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="profileDropdown">
+                            <a class="dropdown-item" href="{{ url_for('staff.profile') }}">Personal profile</a>
+                            <a class="dropdown-item" href="{{ url_for('auth.password') }}">Change password</a>
+                        </div>
+                      </li>
                       <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                       <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="helpDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -72,19 +84,26 @@
                             <a class="dropdown-item" href="#" onclick="openNav();">Help on this page</a>
                         </div>
                       </li>
-{# ----------------- CLIENT ---------------------#}
+{# ----------------- CLIENT MENU ---------------------#}
                   {% elif current_user.is_external %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('home.dashboard') }}">Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('client.add_project') }}">New project</a></li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                               Profile
+                                {% if current_user.company.name == 'New company' %}
+                                    <span class="blink small glyphicon glyphicon-star"></span>
+                                {% endif %}
                             </a>
                             <div class="dropdown-menu" aria-labelledby="profileDropdown">
                                 {%  if current_user.is_external %}
                                     <a class="dropdown-item" href="{{ url_for('client.profile') }}">Personal profile</a>
                                     {% if current_user.company.employees | length == 1 or current_user.company_confirmed %}
-                                        <a class="dropdown-item" href="{{ url_for('client.company') }}">Company details</a>
+                                        <a class="dropdown-item" href="{{ url_for('client.company') }}">Company details
+                                            {% if current_user.company.name == 'New company' %}
+                                                <span class="blink small glyphicon glyphicon-star"></span>
+                                            {% endif %}
+                                        </a>
                                     {%  else %}
                                         <span class="disabled"><a class="dropdown-item" href="#">Company details</a></span>
                                     {% endif %}
@@ -102,7 +121,7 @@
                             <a class="dropdown-item" href="#" onclick="openNav();">Help on this page</a>
                         </div>
                       </li>
-{# ----------------- STUDENT ---------------------#}
+{# ----------------- STUDENT MENU ---------------------#}
                   {% else %}
                      <li class="nav-item"><a class="nav-link" href="{{ url_for('student.dashboard') }}">Projects</a></li>
                      <li class="nav-item"><a class="nav-link" href="{{ url_for('student.vacancies') }}">Vacancies</a></li>
@@ -126,7 +145,7 @@
                         </div>
                       </li>
                   {% endif %}
-{# ----------------- PUBLIC ---------------------#}
+{# ----------------- PUBLIC MENU ---------------------#}
                 {% else %}
                   <li><a href="{{ url_for('home.homepage') }}">Home</a></li>
                   <li><a href="{{ url_for('auth.register') }}">Register</a></li>

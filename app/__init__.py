@@ -1,11 +1,8 @@
 # third-party imports
-import sys
 import os
-import apscheduler as ap
-import time
 import atexit
 
-from flask import Flask, render_template
+from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
@@ -24,6 +21,7 @@ login_manager = LoginManager()
 scheduler = BackgroundScheduler()
 jobs = Jobs()
 
+
 def create_app(config_name):
     app_dir = os.path.dirname(__file__)
     app = Flask(__name__, instance_path=os.path.dirname(app_dir) + '/instance', instance_relative_config=True)
@@ -39,6 +37,8 @@ def create_app(config_name):
 
     Bootstrap(app)
 
+    if scheduler.running:
+        scheduler.shutdown()
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
 
@@ -59,6 +59,9 @@ def create_app(config_name):
     from .student import student as student_blueprint
     app.register_blueprint(student_blueprint)
 
+    from .staff import staff as staff_blueprint
+    app.register_blueprint(staff_blueprint)
+
     @app.errorhandler(403)
     def forbidden(error):
         return render_template('errors/403.html', title='Forbidden'), 403
@@ -70,7 +73,5 @@ def create_app(config_name):
     @app.errorhandler(500)
     def internal_server_error(error):
         return render_template('errors/500.html', title='Server Error'), 500
-
-
 
     return app

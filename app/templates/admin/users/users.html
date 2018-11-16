@@ -1,5 +1,6 @@
 {% import "bootstrap/utils.html" as utils %}
 {% extends "base.html" %}
+{% import 'macros.html' as m %}
 {% block title %}Users{% endblock %}
 {% block content %}
 <div class="content-section">
@@ -17,42 +18,36 @@
                   <th width="15%"> Name </th>
                   <th width="30%"> Programme </th>
                   <th width="30%"> Company </th>
-                  <th width="15%"> Assign </th>
+                  <th width="15%"> Actions </th>
                 </tr>
               </thead>
               <tbody>
               {% for user in users %}
                 {% if user.is_admin %}
                     <tr style="background-color: #aec251; color: white;">
-                        <td> <i class="fa fa-key"></i> Admin </td>
-                        <td> N/A </td>
-                        <td> N/A </td>
-                        <td> N/A </td>
-                    </tr>
                 {% else %}
                     <tr>
-                      <td> {{ user.first_name }} {{ user.last_name }} </td>
-                      <td>
-                        {% if user.programme %}
-                          {{ user.programme.code }}
-                        {% else %}
-                          -
-                        {% endif %}
-                      </td>
-                      <td>
-                        {% if user.company %}
-                          {{ user.company.name }}
-                        {% else %}
-                          -
-                        {% endif %}
-                      </td>
-                      <td>
-                        <a href="{{ url_for('admin.assign_user', id=user.id) }}">
-                          <i class="fa fa-user-plus"></i> Assign
-                        </a>
-                      </td>
-                    </tr>
                 {% endif %}
+                  <td> {{ user.first_name }} {{ user.last_name }} </td>
+                  <td>
+                    {% if user.programme %}
+                      {{ user.programme.code }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if user.company %}
+                      {{ user.company.name }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    {{ m.email('Email', 'admin.users', user.id) }}
+                    {{ m.edit('user', user.id) }}
+                  </td>
+                </tr>
               {% endfor %}
               </tbody>
             </table>

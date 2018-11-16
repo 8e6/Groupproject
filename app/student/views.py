@@ -1,15 +1,13 @@
-from flask import abort, render_template, flash, redirect, url_for, current_app, request
+from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_required
-from flask_mail import Message, Mail
 from collections import Counter
-import logging
 
-from sqlalchemy import and_, or_, text, delete
+from sqlalchemy import and_, or_, text
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.models import *
 from . import student
 from .forms import *
+from app.models import *
 
 
 @student.route('/student_dashboard')
@@ -49,6 +47,8 @@ def profile():
 
     if form.validate_on_submit():
         user.profile_comment = form.profile_comment.data
+        user.notify_new = form.notify_new.data
+        user.notify_interest = form.notify_interest.data
         SkillOffered.query.filter(SkillOffered.user_id==current_user.id).delete()
         for skill in form.skills_offered.raw_data:
             skill_offered = SkillOffered(user_id=current_user.id, skill_id=skill)

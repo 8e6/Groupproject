@@ -10,7 +10,7 @@
                         <h3>To do</h3>
                         {% if unconfirmed_companies | length > 0 %}
                             <h4>{{ unconfirmed_companies | length }} users require company confirmation
-                                <a href="{{url_for('admin.confirm_users') }}" class="btn btn-primary" role="button">Go</a></h4>
+                                <a href="{{url_for('admin.confirm_users') }}" class="btn btn-default" role="button">Go</a></h4>
                         {% endif %}
                     </div>
                     <div class="panel">
@@ -28,6 +28,8 @@
                         {{ projects | length }} projects
                         <br/>
                         {{ new_projects | length }} new
+                        <br>
+                        <a href="{{url_for('admin.list_projects') }}" class="btn btn-default" role="button">Project list</a>
                     </div>
                 </div>
             </div>

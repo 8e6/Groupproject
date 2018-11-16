@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectMultipleField, TextAreaField, HiddenField
+from wtforms import StringField, SubmitField, SelectMultipleField, TextAreaField, BooleanField
 from wtforms.validators import DataRequired, Optional
 
 
@@ -10,6 +10,8 @@ class ProfileForm(FlaskForm):
     last_name = StringField('Last name', render_kw={'disabled':''}, validators=[DataRequired()])
     profile_comment = TextAreaField('Profile comment')
     skills_offered = SelectMultipleField('Skills offered', coerce=int)
+    notify_new = BooleanField('Receive email notification of new projects')
+    notify_interest = BooleanField('Receive email notification of new notes of interest on projects you are interested in')
     submit = SubmitField('Save')
 
 

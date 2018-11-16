@@ -28,24 +28,24 @@
                             {% endfor %}
                         </p>
                         <h3>Overview</h3>
-                        {{ project.display_overview | safe }}
+                        <pre class="content-text">{{ project.overview }}</pre>
                         <h3>Deliverables</h3>
-                        {{ project.display_deliverables | safe  }}
+                        <pre class="content-text">{{ project.deliverables }}</pre>
                         <h3>Resources</h3>
-                        {{ project.display_resources | safe  }}
+                        <pre class="content-text">{{ project.resources }}</pre>
                         <h3>Contact details</h3>
                         {% if project.client.display_name_flag or project.client.display_email_flag or project.client.display_phone_flag %}
                             {% if project.client.display_name_flag %}
-                            {{ project.client.first_name }} {{ project.client.last_name }}<br/>
+                            {{ project.client.first_name }} {{ project.client.last_name }}
                             {% endif %}
-                            {% if project.client.display_email_flag %}<br/>
+                            {% if project.client.display_email_flag %}
                             Email: {{ project.client.email }}
                             {% endif %}
-                            {% if project.client.display_phone_flag %}<br/>
+                            {% if project.client.display_phone_flag %}
                             Phone: {{ project.client.telephone }}
                             {% endif %}
                         {% else %}
-                            The client will contact you after you form a team and register a bid for the project.<br/><br/>
+                            The client will contact you after you form a team and register a bid for the project.
                         {% endif %}
                     </div>
                     <div class="col-sm-4">

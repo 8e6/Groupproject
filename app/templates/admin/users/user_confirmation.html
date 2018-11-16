@@ -56,11 +56,11 @@
                       </td>
                       <td>
                           {% if user.company %}
-                            <a class="btn btn-primary confirm" role="button"
+                            <a
                                href="{{ url_for('admin.confirm_user', id=user.id) }}"
                                data-toggle="confirmation"
                                data-title="Are you sure you want to confirm the company for this user?">
-                                <span class="glyphicon glyphicon-ok-sign"></span>
+                                <span class="large-icon action-glyph glyphicon glyphicon-ok-sign"></span>
                             </a>
                           {% else %}
                               -
@@ -69,8 +69,8 @@
                                id=user.id) }}"
                                data-toggle="confirmation"
                                data-title="Are you sure you want to delete this user?"
-                               class="btn btn-primary delete">
-                               <span class="glyphicon glyphicon-remove-sign"></span></a>
+                            >
+                               <span class="large-icon action-glyph glyphicon glyphicon-remove-sign"></span></a>
                       </td>
                     </tr>
               {% endfor %}

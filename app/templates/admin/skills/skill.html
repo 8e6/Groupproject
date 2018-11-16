@@ -1,11 +1,7 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
 {% block title %}
-    {% if add_programme %}
-        Add Skill
-    {% else %}
-        Edit Skill
-    {% endif %}
+    {{ title }}
 {% endblock %}
 {% block content %}
 <div class="content-section">
@@ -13,11 +9,7 @@
     <div class="middle">
       <div class="inner">
         <div class="center">
-            {% if add_programme %}
-                <h1>Add Skill</h1>
-            {% else %}
-                <h1>Edit Skill</h1>
-            {% endif %}
+            <h1>{{ title }}</h1>
             <br/>
             {{ wtf.quick_form(form) }}
         </div>

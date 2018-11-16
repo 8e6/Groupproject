@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, TextAreaField, SelectField, SelectMultipleField, RadioField
-from wtforms.validators import DataRequired, Optional
+from wtforms.validators import DataRequired, Optional, URL
+
 
 class ProjectForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
@@ -9,7 +10,7 @@ class ProjectForm(FlaskForm):
     deliverables = TextAreaField('Deliverables', validators=[DataRequired()])
     resources = TextAreaField('Resources', validators=[DataRequired()])
     skills_required = SelectMultipleField('Skills required', coerce=int)
-    submit = SubmitField('Submit')
+    submit = SubmitField('Save')
 
 
 class ProfileForm(FlaskForm):
@@ -22,7 +23,7 @@ class ProfileForm(FlaskForm):
     display_name_flag = BooleanField('Display name to students', default=False)
     display_email_flag = BooleanField('Display email to students', default=False)
     display_phone_flag = BooleanField('Display phone to students', default=False)
-    submit = SubmitField('Submit')
+    submit = SubmitField('Save')
 
 
 class ProfileFormWithCompany(FlaskForm):
@@ -30,13 +31,13 @@ class ProfileFormWithCompany(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     first_name = StringField('First name', validators=[DataRequired()])
     last_name = StringField('Last name', validators=[DataRequired()])
-    company_id = SelectField('Company')
+    company_id = SelectField('Company - NB: For a new company, please complete the details separately under the profile link in the menu')
     telephone = StringField('Telephone', validators=[DataRequired()])
     profile_comment = TextAreaField('Comment')
     display_name_flag = BooleanField('Display name to students', default=False)
     display_email_flag = BooleanField('Display email to students', default=False)
     display_phone_flag = BooleanField('Display phone to students', default=False)
-    submit = SubmitField('Submit')
+    submit = SubmitField('Save')
 
 
 class CompanyForm(FlaskForm):
@@ -45,7 +46,7 @@ class CompanyForm(FlaskForm):
     address = StringField('Address', validators=[DataRequired()])
     city = StringField('City', validators=[DataRequired()])
     post_code = StringField('Post code', validators=[DataRequired()])
-    web = StringField('Web address')
+    web = StringField('Web address', validators=[Optional(), URL(message='Please enter your web address including the prefix (eg. http:// or https://')], render_kw={"placeholder": "https://"})
     health_policy_flag = RadioField('Do you have a written Health and Safety policy?', choices=[(1,'yes'),(0,'no')], coerce=int, validators=[Optional()])
     health_policy_link = StringField('Link to H&S policy')
     training_policy_flag = RadioField('Do you have a H&S training policy?', choices=[(1,'yes'),(0,'no')], coerce=int, validators=[Optional()])
@@ -73,4 +74,4 @@ class CompanyForm(FlaskForm):
     data_contact_last_name = StringField('Last name')
     data_contact_position = StringField('Position')
     data_contact_telephone = StringField('Telephone')
-    submit = SubmitField('Submit')
+    submit = SubmitField('Save')
