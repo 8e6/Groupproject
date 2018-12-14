@@ -1,6 +1,6 @@
 {% import "bootstrap/utils.html" as utils %}
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}{{title}}{% endblock %}
 {% block content %}
 <div class="content-section">
     <div class="outer">
@@ -14,8 +14,8 @@
                     {% else %}
                         <select id="skill-filter">
                             <option value="0">Filter by skill</option>
-                            {% for option, count in skills.items() %}
-                                <option value="{{ option[0] }}">{{ option[1] }} ({{ count }})</option>
+                            {% for option, count in skills %}
+                                <option value="{{ option[1] }}">{{ option[0] }} ({{ count }})</option>
                             {% endfor %}
                         </select>
                     {% endif %}
@@ -24,8 +24,8 @@
                     {% else %}
                         <select id="company-filter">
                             <option value="0">Filter by company</option>
-                            {% for option, count in companies.items() %}
-                                <option value="{{ option[0] }}">{{ option[1] }} ({{ count }})</option>
+                            {% for option, count in companies %}
+                                <option value="{{ option[1] }}">{{ option[0] }} ({{ count }})</option>
                             {% endfor %}
                         </select>
                     {% endif %}
@@ -36,17 +36,21 @@
                             <div class="row">
                         {% endif %}
                           <div class="col-md-4">
-                            <div class="card m-t-2 {{ project.status.name }}">
-                                {% if project.status_id == 1 %}
-                                    <a id="{{ project.id }}-link" href="{{url_for('student.edit_project', id=project.id) }}">
-                                {% elif project.status_id == 3 %}
-                                    <a id="{{ project.id }}-link" href="{{url_for('student.project', id=project.id) }}">
+                            <div class="card m-t-2 {% if project.client_id == current_user.id %}owner{% endif %}">
+                                {% if project.client_id == current_user.id %}
+                                    <a id="{{ project.id }}-link" href="{{url_for('staff.my_projects') }}">
+                                {% else %}
+                                    <a id="{{ project.id }}-link" href="{{url_for('staff.project', id=project.id) }}">
                                 {% endif %}
                                 <div class="card-header">
                                     {{ project.title }}
                                 </div>
                                 <div class="card-body">
-                                    {{ project.client.company.name }}
+                                    {% if project.client.is_student %}
+                                        Student project
+                                    {% else %}
+                                        {{ project.client.company.name }}
+                                    {% endif %}
                                     <br/>
                                     {% for skill in project.skills_required %}
                                         {% if loop.index > 1 %}
@@ -59,30 +63,42 @@
                                     </a>
                                 {% endif %}
                                 <div class="card-footer">
-                                    {{ project.status.name }}
-                                    <div class="right-control">
-                                        {% for interest in project.notes_of_interest %}
-                                            {% if interest.user_id == current_user.id %}
-                                                <a href="{{url_for('student.project', id=project.id) }}" data-toggle="popover"
+                                    <span class="badge {{ project.status.name }}">{{ project.status.name }}</span>
+                                    {% if project.status.name != 'Taken' %}
+                                        <div class="right-control">
+                                            {% for interest in project.notes_of_interest %}
+                                                {% if interest.user_id == current_user.id %}
+                                                    <a href="{{url_for('staff.project', id=project.id) }}" data-toggle="popover"
+                                                       data-trigger="hover"
+                                                       data-html=true
+                                                       data-placement="left"
+                                                       data-content="You have a note of interest on this project">
+                                                        <span class="action-glyph glyphicon glyphicon-star"></span>
+                                                    </a>
+
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if project.flags | length > 0 %}
+                                                <a href="{{url_for('staff.project', id=project.id) }}" data-toggle="popover"
                                                    data-trigger="hover"
                                                    data-html=true
                                                    data-placement="left"
-                                                   data-content="You have a note of interest on this project">
-                                                    <span class="action-glyph glyphicon glyphicon-star"></span>
+                                                   data-content="There is active recruitment for this project - click for more information"
+                                                    <span class="blink glyphicon glyphicon-flag"></span>
                                                 </a>
-
                                             {% endif %}
-                                        {% endfor %}
-                                        {% if project.flags | length > 0 %}
-                                            <a href="{{url_for('student.project', id=project.id) }}" data-toggle="popover"
-                                               data-trigger="hover"
-                                               data-html=true
-                                               data-placement="left"
-                                               data-content="There is active recruitment for this project - click for more information"
-                                                <span class="blink action-glyph glyphicon glyphicon-flag"></span>
-                                            </a>
-                                        {% endif %}
-                                    </div>
+                                            {% if bids[project.id]  > 0 %}
+                                                <span class="badge bids">
+                                                    {{ bids[project.id]  }}
+                                                    {% if bids[project.id] == 1 %}
+                                                        bid
+                                                    {% else %}
+                                                        bids
+                                                    {% endif %}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                           </div>
@@ -107,7 +123,7 @@
 {% endblock %}
 {% block help %}
     <p>
-        The dashboard lists all of the available projects.
+        This page lists all of the available projects.
     </p>
     <p>
         An icon is displayed to indicate projects where you have made a note of interest. If you want to remove your

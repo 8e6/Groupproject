@@ -1,12 +1,7 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
 {% import "macros.html" as m %}
-{% block title %}
-    {% if add_project %}
-        Add Project
-    {% else %}
-        Edit Project
-    {% endif %}
+{% block title %}{{ title }}
 {% endblock %}
 
 {% block content %}
@@ -16,11 +11,7 @@
         <div class="middle">
           <div class="inner">
             <div class="center">
-                {% if add_project %}
-                    <h1>Add Project</h1>
-                {% else %}
-                    <h1>Edit Project</h1>
-                {% endif %}
+                <h1>{{ title }}</h1>
                 {% if not add_project %}
                     {{ m.email('Email client', 'admin.edit_project', project.client_id, project.id) }}
                 {% endif %}

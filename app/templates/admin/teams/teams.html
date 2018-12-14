@@ -10,9 +10,7 @@
         <br/>
         <h1 style="text-align:center;">Teams</h1>
         {% if teams %}
-          <hr class="intro-divider">
-          <div class="center">
-            <table class="table table-striped table-bordered">
+            <table class="table table-striped table-bordered wide-table">
               <thead>
                 <tr>
                   <th width="5%"> Team </th>
@@ -31,9 +29,12 @@
                   <td> {{ team.project.title }} </td>
                   <td> {{ team.status.name }} </td>
                   <td> {% for member in team.members %}
-                      {{ member.user.first_name }} {{ member.user.last_name }}
+                      {{ member.user.first_name }} {{ member.user.last_name }} ({{ member.user.programme.code }})
+                      {% if member.project_manager %}
+                          <span class="glyphicon glyphicon-star"></span>
+                      {% endif %}
                       <div class="right-control">
-                          {{m.email(title="Email", return_url='admin.teams', id=member.user.id)}}
+                          {{m.email(title="Email", return_url='admin.list_teams', id=member.user.id)}}
                       </div>
                         <br/>
                       {%  endfor %}
@@ -49,7 +50,6 @@
               {% endfor %}
               </tbody>
             </table>
-          </div>
           <div style="text-align: center">
         {% else %}
           <div style="text-align: center">

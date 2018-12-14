@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-{% block title %}
-    View Project
-{% endblock %}
+{% import 'macros.html' as m %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
     {{  super() }}
@@ -14,7 +13,9 @@
                     <div class="col-sm-8">
                         <h1>{{ project.title }}</h1>
                         <p>
-                            {% if project.client.company.web %}
+                            {% if project.client.is_student %}
+                                <p>Student project</p>
+                            {% elif project.client.company.web %}
                                 <a href="{{ project.client.company.web }}" target="blank">{{ project.client.company.name }}</a>
                             {% else %}
                                 {{ project.client.company.name }}
@@ -28,11 +29,11 @@
                             {% endfor %}
                         </p>
                         <h3>Overview</h3>
-                        {{ project.display_overview | safe }}
+                        <p class="preserve_newlines">{{ project.overview }}</p>
                         <h3>Deliverables</h3>
-                        {{ project.display_deliverables | safe  }}
+                        <p class="preserve_newlines">{{ project.deliverables  }}</p>
                         <h3>Resources</h3>
-                        {{ project.display_resources | safe  }}
+                        <p class="preserve_newlines">{{ project.resources }}</p>
                         <h3>Contact details</h3>
                         {% if project.client.display_name_flag or project.client.display_email_flag or project.client.display_phone_flag %}
                             {% if project.client.display_name_flag %}
@@ -47,68 +48,85 @@
                         {% else %}
                             The client will contact you after you form a team and register a bid for the project.<br/><br/>
                         {% endif %}
+                        {% if project.client_id == current_user.id %}
+                            {% if project.status.name != 'Complete' %}
+                                <a class="btn btn-default" href="{{ url_for('student.edit_project', id=project.id) }}">Edit</a>
+                            {% endif %}
+                            {% for transition in transitions %}
+                                {% if transition.from_status_id == project.status_id %}
+                                    {{ m.status('project', 'student.transition', project.id, transition)}}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
                     </div>
                     <div class="col-sm-4">
-                        <h3>Notes of interest</h3>
-                        {% if project.notes_of_interest | length == 0 %}
-                            <p>No interest yet</p>
-                        {% endif %}
-                        {% if not interest %}
-                            <a href="{{url_for('student.add_interest', id=project.id) }}" class="btn btn-default">Note your interest</a>
-                        {% else %}
+                        {% if project.status.name == 'Taken' %}
+                            <h3>Project is taken</h3>
                             {% if team_member != None %}
-                                <a href="{{url_for('student.edit_team', project_id=project.id, id=team_member.team_id) }}" class="btn btn-default">Edit team</a>
-                            {% else %}
-                                <a href="{{url_for('student.create_team', project_id=project.id, id=team_member.team_id) }}" class="btn btn-default">Register team</a>
+                                <a href="{{url_for('student.edit_team', project_id=project.id, id=team_member.team_id) }}" class="btn btn-default">Manage bid</a>
                             {% endif %}
-                            {% if flag %}
-                                <a href="{{url_for('student.edit_flag', id=flag.id) }}" class="btn btn-default">Edit flag</a>
-                            {% else %}
-                                <a href="{{url_for('student.set_flag', id=project.id) }}" class="btn btn-default">Set flag</a>
+                        {% else %}
+                            <h3>Notes of interest</h3>
+                            {% if project.notes_of_interest | length == 0 %}
+                                <p>No interest yet</p>
                             {% endif %}
-                        {% endif %}
-                        <ul class="interest">
-                        {% for note in project.notes_of_interest %}
-                            <li>
-                                <a href="#" data-toggle="popover"
-                                   data-trigger="focus"
-                                   data-html=true
-                                   data-placement="left"
-                                   title="{{note.user.programme.title}}"
-                                   data-content="{{note.user.profile_comment}}
-                                   <br><br>
-                                    {% for skill in note.user.skills_offered %}
-                                        {% if loop.index > 1 %}, {% endif %}
-                                        {{ skill.skill_offered.name }}
-                                    {% endfor %}
-                                    <br><br>
-                                     <input id='email-address' value='{{ note.user.email }}'>
-                                     <a href='#' onclick='copy_email_address();'><span class='large-icon action-glyph glyphicon glyphicon-copy'></span></a> ">
-                                    {{ note.user.first_name }} {{ note.user.last_name }} <span class="glyphicon glyphicon-info-sign"></span></span>
-                                </a>
-                                {% if note.user.id == current_user.id and team_member == None and not flag %}
-                                    <a href="{{url_for('student.delete_interest', project_id=project.id, id=note.id) }}"
-                                       data-toggle="confirmation"
-                                       data-title="Delete your note of interest?"
-                                    ><span class="action-glyph glyphicon glyphicon-remove-circle"></span></a>
-                                {%  endif %}
-                                {% for flag in project.flags %}
-                                    {% if flag.user_id == note.user_id %}
+                            {% if team_member != None %}
+                                <a href="{{url_for('student.edit_team', project_id=project.id, id=team_member.team_id) }}" class="btn btn-default">Manage bid</a>
+                            {% elif not interest %}
+                                <a href="{{url_for('student.add_interest', id=project.id) }}" class="btn btn-default">Note your interest</a>
+                            {% else %}
+                                {% if not project.client.is_student or project.client_id == current_user.id %}
+                                    <a href="{{url_for('student.create_team', project_id=project.id, id=team_member.team_id) }}" class="btn btn-default">Register team</a>
+                                {% endif %}
+                                {% if flag %}
+                                    <a href="{{url_for('student.edit_flag', id=flag.id) }}" class="btn btn-default">Edit flag</a>
+                                {% elif not project.client.is_student or project.client_id == current_user.id %}
+                                    <a href="{{url_for('student.set_flag', id=project.id) }}" class="btn btn-default">Set flag</a>
+                                {% endif %}
+                            {% endif %}
+                            <ul class="interest">
+                            {% for note in project.notes_of_interest %}
+                                <li>
+                                    <a href="#" data-toggle="popover"
+                                       data-trigger="focus"
+                                       data-html=true
+                                       data-placement="left"
+                                       title="{{note.user.programme.title}}"
+                                       data-content="{{note.user.profile_comment}}
+                                       <br><br>
+                                        {% for skill in note.user.skills_offered %}
+                                            {% if loop.index > 1 %}, {% endif %}
+                                            {{ skill.skill_offered.name }}
+                                        {% endfor %}
+                                        <br><br>
+                                         <input id='email-address' value='{{ note.user.email }}'>
+                                         <a href='#' onclick='copy_email_address();'><span class='large-icon action-glyph glyphicon glyphicon-copy'></span></a> ">
+                                        {{ note.user.first_name }} {{ note.user.last_name }} <span class="glyphicon glyphicon-info-sign"></span></span>
+                                    </a>
+                                    {% if note.user.id == current_user.id and team_member == None and not flag %}
+                                        <a href="{{url_for('student.delete_interest', project_id=project.id, id=note.id) }}"
+                                           data-toggle="confirmation"
+                                           data-title="Delete your note of interest?"
+                                        ><span class="action-glyph glyphicon glyphicon-remove-circle"></span></a>
+                                    {%  endif %}
+                                    {% for flag in project.flags %}
+                                        {% if flag.user_id == note.user_id %}
 
-                                        <a href="#" data-toggle="popover"
-                                           data-trigger="focus"
-                                           data-html=true
-                                           data-placement="left"
-                                           data-content="{{flag.message}}
-                                            <br><br>
-                                             <input id='email-address' value='{{ flag.user.email }}'>
-                                             <a href='#' onclick='copy_email_address();'><span class='large-icon action-glyph glyphicon glyphicon-copy'></span></a> ">
-                                            <span class="blink action-glyph glyphicon glyphicon-flag"></span>
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
-                            </li>
-                        {% endfor %}
+                                            <a href="#" data-toggle="popover"
+                                               data-trigger="focus"
+                                               data-html=true
+                                               data-placement="left"
+                                               data-content="{{flag.message}}
+                                                <br><br>
+                                                 <input id='email-address' value='{{ flag.user.email }}'>
+                                                 <a href='#' onclick='copy_email_address();'><span class='large-icon action-glyph glyphicon glyphicon-copy'></span></a> ">
+                                                <span class="blink action-glyph glyphicon glyphicon-flag"></span>
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </li>
+                            {% endfor %}
+                        {% endif %}
                         </ul>
                     </div>
                 </div>

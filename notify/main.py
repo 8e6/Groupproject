@@ -1,11 +1,14 @@
 import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import sys
+sys.path.append('/opt/apps/soc09109/soc09109/')
 from notify.models_background import  *
+
 
 def log(message):
     with open("/tmp/flask_notification_log", "a") as f:
-        f.write(message)
+        f.write(str(message))
 
 
 class Osmail(object):
@@ -37,21 +40,15 @@ class Osmail(object):
         self.out = msg
 
     def send(self):
-        # with open("/tmp/temp_flask_message.txt", "wb") as f:
-        #     f.write(self.out.as_string().encode('utf-8'))
-        # os.system(
-        #     "cat /tmp/temp_flask_message.txt | sendmail -f " + self.sender + " " + self.recipient)
-        # os.remove("/tmp/temp_flask_message.txt")
-
         os.system(
-            "echo \"" + self.out.replace('"',"'") + "\"  | sendmail -f " + self.sender + " " + self.recipient)
+            "echo \"" + self.out.as_string() + "\"  | sendmail -f " + self.sender + " " + self.recipient)
         log(datetime.now().strftime('%y-%m-%d %H:%M') + ' EMAIL ' + self.recipient + ': ' + self.subject)
+
+    def __repr__(self):
+        return self.out
 
 
 class Jobs(object):
-    @staticmethod
-    def hello():
-        print("Hello World")
 
     @staticmethod
     def notify():
@@ -62,19 +59,19 @@ class Jobs(object):
         new_projects = session.query(Project).filter(and_(Project.status_id == 3, Project.updated_date > settings.last_notification_check)).all()
         projects_message = ""
         if len(new_projects) > 0:
-            projects_message += "There are some new projects available:/n/n"
+            projects_message += "There are some new projects available:\n\n"
             for project in new_projects:
-                projects_message += "    " + project.title + "/n"
+                projects_message += project.title.upper() + "\n"
                 if project.client.is_student:
-                    projects_message += 'Student project proposal/n'
+                    projects_message += 'Student project proposal\n'
                 else:
-                    projects_message += project.client.company.name + "/n"
+                    projects_message += project.client.company.name + "\n"
                 projects_message += 'Skills required: '
                 for i, skill_required in enumerate(project.skills_required):
                     if i > 0:
                         projects_message += ", "
                     projects_message += skill_required.skill_required.name
-                projects_message += "/n/n"
+                projects_message += "\n\n"
 
         log(datetime.now().strftime('%Y-%m-%d %H:%M') + ' Checking for interest notifications')
         students = session.query(User).filter(User.is_external == False).all()
@@ -110,7 +107,7 @@ class Jobs(object):
                             if i == 0:
                                 message += "There are new notes of interest on projects that you are interested in:\n\n"
                             message += project.title
-                            message += ": " + str(len(notes)) + " new note(s)/n"
+                            message += ": " + str(len(notes)) + " new note(s)\n"
                 else:
                     message += "You have asked for a notification when someone else puts a note of interest on a project that you are interested in. "
                     message += "However, at the moment you have no notes of interest on any live projects. "
@@ -131,6 +128,7 @@ class Jobs(object):
                          text=alert.message_text)
 
             msg.send()
+
             now = datetime.now()
             alert.sent_date = now.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -138,3 +136,8 @@ class Jobs(object):
         now = datetime.now()
         settings.last_notification_check = now.strftime('%Y-%m-%d %H:%M:%S')
         session.commit()
+
+
+if __name__ == '__main__':
+    jobs = Jobs()
+    jobs.notify()

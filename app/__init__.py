@@ -17,7 +17,6 @@ from config import app_config
 # db variable initialization
 db = SQLAlchemy()
 login_manager = LoginManager()
-
 scheduler = BackgroundScheduler()
 jobs = Jobs()
 
@@ -34,7 +33,6 @@ def create_app(config_name):
     login_manager.login_view = "auth.login"
 
     migrate = Migrate(app, db)
-
     Bootstrap(app)
 
     if scheduler.running:

@@ -17,6 +17,9 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
+    SQLALCHEMY_ECHO = False
+    logging.basicConfig()
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 
 
 class TestingConfig(Config):

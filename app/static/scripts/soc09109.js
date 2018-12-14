@@ -2,7 +2,7 @@ $(function () {
     $('[data-toggle="popover"]').popover();
 });
 
-$('#email_form').submit(function() {
+$('.clock-form').submit(function() {
     $('.overlay').show();
 });
 

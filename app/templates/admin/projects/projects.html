@@ -10,18 +10,18 @@
         <br/>
         <h1 style="text-align:center;">Projects</h1>
         {% if projects %}
-          <hr class="intro-divider">
             <table class="wide-table table table-striped table-bordered">
               <thead>
                 <tr>
-                  <th width="20%"> Title </th>
-                  <th width="15%"> Client </th>
-                  <th width="5%"> Academic year </th>
-                  <th width="5%"> Status </th>
-                  <th width="5%"> Notes of interest </th>
-                  <th width="5%"> Flags </th>
-                  <th width="40%"> Notes </th>
-                  <th width="5%"> Actions </th>
+                  <th width="20%">Title</th>
+                  <th width="15%">Client</th>
+                  <th width="5%">Year</th>
+                  <th width="5%">Status</th>
+                  <th width="5%">Notes</th>
+                  <th width="5%">Flags</th>
+                  <th width="5%">Teams</th>
+                  <th width="30%">Notes</th>
+                  <th width="10%">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -57,6 +57,13 @@
                   <td>
                     {% if project.flags %}
                       {{ project.flags|length }}
+                    {% else %}
+                      0
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if project.teams %}
+                      {{ project.teams|length }}
                     {% else %}
                       0
                     {% endif %}

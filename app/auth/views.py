@@ -1,12 +1,13 @@
-from flask import flash, redirect, render_template, url_for, current_app, abort
+from flask import flash, redirect, render_template, url_for, current_app, abort, Flask
 from flask_login import login_required, login_user, logout_user, current_user
 from flask_mail import Message, Mail
+from datetime import datetime
 
 from . import auth
 from .forms import *
 from .. import db
 from app.models import User, Company
-
+import logging
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -93,15 +94,19 @@ def login():
 
         elif user is not None and user.verify_password(form.password.data):
             login_user(user)
-            user.online_flag = True
+            user.login_count = user.login_count + 1
+            user.last_login = datetime.now()
             db.session.commit()
+            logging.info('{} {} logged in at {}'.format(user.first_name, user.last_name, datetime.now().strftime('%y-%m-%d %H:%M')))
 
             if user.is_admin:
-                return redirect(url_for('home.admin_dashboard'))
+                return redirect(url_for('admin.dashboard'))
             elif user.is_external:
-                return redirect(url_for('home.dashboard'))
+                return redirect(url_for('client.projects'))
+            elif user.is_staff:
+                return redirect(url_for('staff.projects'))
             else:
-                return redirect(url_for('student.dashboard'))
+                return redirect(url_for('student.projects'))
 
         else:
             flash('Invalid email or password', 'error')
@@ -114,8 +119,6 @@ def login():
 @login_required
 def logout():
     user = User.query.get(current_user.id)
-    user.online_flag = False
-    db.session.commit()
     logout_user()
     flash('You have successfully been logged out.')
 
@@ -135,13 +138,13 @@ def password():
 
             flash('Password updated')
             if current_user.is_admin:
-                return redirect(url_for('home.admin_dashboard'))
+                return redirect(url_for('admin.dashboard'))
             else:
-                return redirect(url_for('home.dashboard'))
+                return redirect(url_for('client.projects'))
         else:
             flash('Incorrect current password entered', 'error')
 
-    return render_template('auth/password.html', form=form, title='Change password')
+    return render_template('auth/password.html', form=form, title='Change your password')
 
 
 @auth.route('/forgotten', methods=['GET', 'POST'])
@@ -200,4 +203,4 @@ def reset(token):
         flash('Password updated - please log in')
         return redirect(url_for('auth.login'))
 
-    return render_template('auth/reset.html', form=form, title='Reset password')
+    return render_template('auth/password.html', form=form, title='Reset your password')

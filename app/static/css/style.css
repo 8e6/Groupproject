@@ -17,6 +17,13 @@ a:hover, .navbar-default .navbar-brand:hover, .navbar-default .navbar-nav>li>a:h
   color: #4D1A22;
 }
 
+a.action-link:hover  {
+    text-decoration: none;
+}
+a.action-link:focus  {
+    text-decoration: none;
+}
+
 footer {
     padding: 50px 0;
     background-color: #f8f8f8;
@@ -205,6 +212,35 @@ form #admin_notes {
 
 .action-glyph {
     color: #337ab7;
+    margin-right: 10px;
+}
+
+.dashboard {
+    padding: 50px;
+}
+
+.dashboard .card {
+    border: 1px solid lightgray;
+    margin-bottom: 20px;
+    width: 300px;
+}
+
+.dashboard .card-header {
+    background-color: #efefef;
+    padding: 5px;
+}
+
+.dashboard .card-body {
+    text-decoration: none;
+    color: black;
+}
+
+.dashboard a {
+    text-decoration: none;
+}
+
+.dashboard .card:hover {
+    background-color: #f3f9ff;
 }
 
 .dropdown-item {
@@ -278,6 +314,23 @@ form #admin_notes {
   }
 }
 
+.filter-controls {
+    margin-left: 5%;
+}
+
+.filter-controls a {
+    text-decoration: None;
+    padding: 0 5px 0 5px;
+}
+
+.inset-chart {
+    float: right;
+}
+
+.card-body .modebar {
+      display: none !important;
+}
+
 .interest li {
     list-style: none;
     font-size: medium;
@@ -306,12 +359,20 @@ form #admin_notes {
     font-size: larger;
 }
 
+.popover-title {
+    color: black;
+}
+
+.preserve_newlines {
+    white-space: pre-wrap;
+}
+
 .projects .card {
     border: 1px solid lightgray;
     margin-bottom: 20px;
 }
 
-.projects .Live:hover {
+.projects a .card-body:hover {
     background-color: #f3f9ff;
 }
 
@@ -323,6 +384,11 @@ form #admin_notes {
 .projects .card-header {
     background-color: #efefef;
     padding: 5px;
+}
+
+.owner .card-header {
+    background-color: #c31632;
+    color: white;
 }
 
 .projects .Withdrawn .card-header {
@@ -362,6 +428,48 @@ form #admin_notes {
 .live {
     background-color: #aec251;
 }
+.taken {
+    background-color: lightblue;
+}
+
+.New {
+    background-color: #337ab7;
+}
+.Accepted, .Live, .Protected, .Submitted {
+    background-color: #669110;
+}
+.Declined {
+    background-color: firebrick;
+}
+.Shortlisted, .Relisted, .bids {
+    background-color: sandybrown ;
+}
+
+.tab-pane {
+    position: relative;
+}
+.team-contact {
+    font-weight: bold;
+    font-size: larger;
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    right: 10px;
+}
+.team-contact::before {
+    content: "Contact: ";
+}
+
+.team-member {
+    border-left: 1px dotted #a0a0a0;
+    padding-left: 20px;
+    margin-top: 20px;
+}
+
+.team-member-name {
+    font-size: large;
+
+}
 
 .right-control {
     display: inline;
@@ -369,15 +477,23 @@ form #admin_notes {
     padding-right: 20px;
 }
 
+.column {
+    float: left;
+    width: 50%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
 #skill-filter {
     margin: 0px 20px 20px 0px;
 }
 #company-filter {
     margin: 0px 20px 20px 0px;
-}
-
-.bids-badge {
-    margin-left: 10px;
 }
 
 .team-table {

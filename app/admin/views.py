@@ -1,19 +1,67 @@
-from flask import abort, flash, redirect, render_template, url_for, current_app
+from flask import abort, flash, redirect, render_template, url_for, current_app, request
 from flask_login import current_user, login_required
 from flask_mail import Message, Mail
-from sqlalchemy.sql import text
+from sqlalchemy.sql import text, func
+from datetime import timedelta
+
+import json
+import plotly
+import pandas as pd
 
 from . import admin
 from .forms import *
 from app import scheduler
 from app.models import *
 from app.scheduled_jobs import Jobs
+from .charts import *
 
 jobs = Jobs()
 
 def check_admin():
     if not current_user.is_admin:
         abort(403)
+
+
+@admin.route('/admin/dashboard')
+@login_required
+def dashboard():
+    # prevent non-admins from accessing the page
+    if not current_user.is_admin:
+        abort(403)
+
+    unconfirmed_companies = User.query.filter(User.company_confirmed == 0).all()
+    projects = Project.query.order_by(Project.title).all()
+    project_domain = Status.query.filter(Domain.name == 'project').first()
+    status_new = Status.query.filter(Status.domain_id == project_domain.id).first()
+    new_projects = Project.query.filter(Project.status_id == status_new.id).all()
+
+    one_hour_ago = datetime.now() - timedelta(hours=1)
+    midnight = datetime.now().date()
+    logins = db.session.query(func.sum(User.login_count).label('sum')).first()
+    logins_today = db.session.query(func.count(User.login_count).label('count')).filter(User.last_login > midnight).first()
+    logins_this_hour = db.session.query(func.count(User.login_count).label('count')).filter(User.last_login > one_hour_ago).first()
+
+    stats_data = stats_chart()
+    projects_data = projects_chart()
+
+    charts = [stats_data, projects_data]
+    chart_JSON = json.dumps(charts, cls=plotly.utils.PlotlyJSONEncoder)
+
+
+    chart_metadata = [{'id': 0, 'title': 'Stats'},
+                      {'id': 1, 'title': 'Projects'}]
+
+    return render_template('admin/dashboard.html',
+                           title="Dashboard",
+                           unconfirmed_companies=unconfirmed_companies,
+                           logins=logins,
+                           logins_today=logins_today,
+                           logins_this_hour=logins_this_hour,
+                           projects=projects,
+                           new_projects=new_projects,
+                           chart_JSON=chart_JSON,
+                           chart_metadata=chart_metadata
+                           )
 
 
 # --------  Academic year views ----------#
@@ -85,6 +133,81 @@ def delete_academic_year(year):
     flash('You have successfully deleted the academic year.')
 
     return redirect(url_for('admin.list_academic_years'))
+
+
+#--------  Alert views ----------#
+
+@admin.route('/alerts', methods=['GET', 'POST'])
+@login_required
+def alerts():
+    check_admin()
+    alerts = AlertText.query.order_by(AlertText.code).all()
+
+    return render_template('admin/alerts/alerts.html', alerts=alerts, title="Alert messages")
+
+
+@admin.route('/alerts/add', methods=['GET', 'POST'])
+@login_required
+def add_alert():
+    check_admin()
+    add_alert = True
+
+    form = AlertForm()
+    if form.validate_on_submit():
+        alert = AlertText(code=form.code.data,
+                          subject=form.subject.data,
+                          message_text=form.message_text.data)
+        try:
+            db.session.add(alert)
+            db.session.commit()
+            flash('New alert added')
+        except:
+            flash('Error: alert code already exists.')
+
+        return redirect(url_for('admin.alerts'))
+
+    return render_template('admin/alerts/alert.html', action="Add",
+                           add_alert=add_alert, form=form,
+                           title="Add alert")
+
+
+@admin.route('/alerts/edit/<code>', methods=['GET', 'POST'])
+@login_required
+def edit_alert(code):
+    check_admin()
+    add_alert = False
+
+    alert = AlertText.query.get_or_404(code)
+    form = AlertForm(obj=alert)
+    if form.validate_on_submit():
+        alert.code = form.code.data
+        alert.subject = form.subject.data
+        alert.message_text = form.message_text.data
+        db.session.commit()
+        flash('Alert updated')
+
+        return redirect(url_for('admin.alerts'))
+
+    return render_template('admin/alerts/alert.html', action="Edit",
+                           add_alert=add_alert, form=form,
+                           alert=alert, title="Edit alerts")
+
+
+@admin.route('/alerts/delete/<code>', methods=['GET', 'POST'])
+@login_required
+def delete_alert(code):
+    check_admin()
+
+    alert = AlertText.query.get_or_404(code)
+    try:
+        db.session.delete(alert)
+        db.session.commit()
+        flash('Alert deleted')
+    except Exception as e:
+        flash(str(e), 'error')
+
+    return redirect(url_for('admin.alerts'))
+
 
 
 #--------  Programme views ----------#
@@ -658,7 +781,7 @@ def clear_notes(id):
     check_admin()
 
     project = Project.query.get_or_404(id)
-    project.admin_notes = None
+    project.admin_notes = ""
     db.session.commit()
     flash('Notes cleared')
 
@@ -685,6 +808,7 @@ def project_status(id, status_id):
 
     project = Project.query.get_or_404(id)
     project.status_id = status_id
+    project.updated_date = datetime.now()
     db.session.add(project)
     db.session.commit()
     flash('Project status updated')
@@ -721,7 +845,7 @@ def update_settings():
         except:
             flash('Error: settings not updated.')
 
-        return redirect(url_for('home.admin_dashboard'))
+        return redirect(url_for('admin.dashboard'))
 
     return render_template('admin/settings/settings.html', form=form, title='Settings', all_jobs=all_jobs, running=running)
 
@@ -838,16 +962,13 @@ def add_status():
                         description = form.description.data,
                         domain_id = form.domain_id.data,
                         action_text = form.action_text.data,
-                        css_class = form.css_class.data,
                         default_for_domain = form.default_for_domain.data
                         )
 
-        try:
-            db.session.add(status)
-            db.session.commit()
-            flash('You have successfully added a new status.')
-        except:
-            flash('Error: status id already exists.')
+        # try:
+        db.session.add(status)
+        db.session.commit()
+        flash('You have successfully added a new status.')
 
         return redirect(url_for('admin.list_statuses'))
 
@@ -869,7 +990,6 @@ def edit_status(id):
         status.description = form.description.data
         status.domain_id = form.domain_id.data
         status.action_text = form.action_text.data
-        status.css_class = form.css_class.data
         status.default_for_domain = form.default_for_domain.data
         db.session.add(status)
         db.session.commit()
@@ -881,7 +1001,6 @@ def edit_status(id):
     form.description = status.description
     form.domain_id.data = status.domain_id
     form.action_text.data = status.action_text
-    form.css_class.data = status.css_class
     form.default_for_domain.data = status.default_for_domain
 
     return render_template('admin/statuses/status.html', add_status=add_status,
@@ -964,7 +1083,7 @@ def edit_team(id):
     form = TeamForm(obj=team)
     form.project_id.choices = [(p.id, p.title) for p in Project.query.order_by(text('title'))]
     form.created_by.choices = [(u.id, u.first_name + ' ' + u.last_name) for u in User.query.order_by(text('last_name'), text('first_name'))]
-    form.members.choices = [(u.id, u.first_name + ' ' + u.last_name) for u in User.query.order_by(text('last_name'), text('first_name'))]
+    form.members.choices = [(u.id, u.first_name + ' ' + u.last_name) for u in User.query.filter(User.is_student == 1).order_by(text('last_name'), text('first_name'))]
     team_domain = Domain.query.filter(Domain.name == 'team').first()
     form.status_id.choices = [(s.id, s.name) for s in Status.query.filter(Status.domain_id == team_domain.id).order_by(text('status.name'))]
     form.members.data = [m.user.id for m in team.members]
@@ -1092,42 +1211,34 @@ def delete_transition(id):
 
 #--------  User views ----------#
 
-@admin.route('/users')
+@admin.route('/users', methods=['GET', 'POST'])
 @login_required
 def users():
     check_admin()
+    filter = request.args.get("filter")
+    one_hour_ago = datetime.now() - timedelta(hours=1)
 
-    users = User.query.all()
-    return render_template('admin/users/users.html', users=users, title='Users')
+    if filter is None or filter == 'all':
+        title = "All users"
+        users = User.query.order_by(User.is_admin.desc()).order_by(User.last_name).order_by(User.first_name).all()
+    elif filter == 'students':
+        title = filter.title()
+        users = User.query.filter(User.is_student).order_by(User.is_admin.desc()).order_by(User.last_name).order_by(User.first_name).all()
+    elif filter == 'staff':
+        title = filter.title()
+        users = User.query.filter(User.is_staff).order_by(User.is_admin.desc()).order_by(User.last_name).order_by(
+            User.first_name).all()
+    elif filter == 'clients':
+        title = filter.title()
+        users = User.query.filter(User.is_external).order_by(User.is_admin.desc()).order_by(User.last_name).order_by(User.first_name).all()
+    elif filter == 'recent':
+        title = filter.title()
+        users = User.query.filter(User.last_login > one_hour_ago).order_by(User.is_admin.desc()).order_by(User.last_name).order_by(User.first_name).all()
+    elif filter == 'confirm':
+        title = filter.title()
+        users = User.query.filter(~User.company_confirmed).order_by(User.is_admin.desc()).order_by(User.last_name).order_by(User.first_name).all()
 
-
-@admin.route('/students')
-@login_required
-def students():
-    check_admin()
-
-    users = User.query.filter(User.programme_code != None).all()
-    return render_template('admin/users/users.html', users=users, title='Students')
-
-
-@admin.route('/clients')
-@login_required
-def clients():
-    check_admin()
-
-    users = User.query.filter(User.is_external == True).all()
-    return render_template('admin/users/users.html', users=users, title='Clients')
-
-
-@admin.route('/users/confirm', methods=['GET', 'POST'])
-@login_required
-def confirm_users():
-    check_admin()
-    users = User.query.filter(User.company_confirmed == 0).all()
-
-    return render_template('admin/users/user_confirmation.html',
-                           users=users,
-                           title='Confirm company')
+    return render_template('admin/users/users.html', users=users, filter=filter, title=title)
 
 
 @admin.route('/user/edit/<int:id>', methods=['GET', 'POST'])
@@ -1140,19 +1251,25 @@ def edit_user(id):
     form = UserForm(obj=user)
     programmes = Programme.query.all()
     form.programme_code.choices = [(p.code, p.title) for p in programmes]
+    form.company_id.choices = [(c.id, c.name) for c in Company.query.order_by(Company.name).all()]
     if form.validate_on_submit():
         user.email = form.email.data
         user.username = form.username.data
         user.first_name = form.first_name.data
         user.last_name = form.last_name.data
         user.telephone = form.telephone.data
+        user.company_id = form.company_id.raw_data[0]
         user.programme_code = form.programme_code.raw_data[0]
         user.profile_comment = form.profile_comment.data
         user.is_admin = form.is_admin.data
         user.is_external = form.is_external.data
+        user.is_staff = form.is_staff.data
+        user.is_student = form.is_student.data
         user.display_name_flag = form.display_name_flag.data
         user.display_email_flag = form.display_email_flag.data
         user.display_phone_flag = form.display_phone_flag.data
+        user.notify_new = form.notify_new.data
+        user.notify_interest = form.notify_interest.data
         db.session.commit()
 
         flash('User updated')
@@ -1175,7 +1292,7 @@ def confirm_user(id):
     flash('Company confirmed for ' + user.first_name + ' ' + user.last_name)
 
     users = User.query.filter(User.company_confirmed == 0).all()
-    return render_template('admin/users/user_confirmation.html',
+    return render_template('admin/users/users.html',
                            users=users,
                            title='Confirm company')
 
@@ -1191,7 +1308,7 @@ def delete_user(id):
     flash(user.first_name + ' ' + user.last_name + ' deleted')
 
     users = User.query.filter(User.company_confirmed == 0).all()
-    return render_template('admin/users/user_confirmation.html',
+    return render_template('admin/users/users.html',
                            users=users,
                            title='Confirm company')
 
@@ -1255,7 +1372,7 @@ def email(return_url, id, return_id=None):
 @login_required
 def team_email(return_url, id, return_id=None):
     check_admin()
-    members = TeamMember.query.filter(TeamMember.team_id == id).all()
+    recipients = [m.user for m in TeamMember.query.filter(TeamMember.team_id == id).all()]
 
     form = EmailForm()
     if form.validate_on_submit():
@@ -1263,7 +1380,7 @@ def team_email(return_url, id, return_id=None):
                       body=form.message.data,
                       sender=current_user.email,
                       cc=[current_user.email],
-                      recipients=[u.id for u in members])
+                      recipients=[u.email for u in recipients])
         mail = Mail(current_app)
         mail.send(msg)
 
@@ -1274,8 +1391,53 @@ def team_email(return_url, id, return_id=None):
         else:
             return redirect(url_for(return_url))
 
-    return render_template('admin/users/team_email.html',
-                           members=members, form=form,
+    return render_template('admin/users/group_email.html',
+                           recipients=recipients, form=form,
                            title='Email')
+
+
+@admin.route('/students_email/<return_url>', methods=['GET', 'POST'])
+@login_required
+def students_email(return_url):
+    check_admin()
+    students = User.query.filter(User.is_student).all()
+
+    form = EmailForm()
+    if form.validate_on_submit():
+        msg = Message(subject=form.subject.data,
+                      body=form.message.data,
+                      sender=current_user.email,
+                      recipients=[current_user.email],
+                      bcc=[u.email for u in students])
+        mail = Mail(current_app)
+        mail.send(msg)
+
+        flash('Email sent')
+
+        return redirect(url_for(return_url))
+
+    return render_template('admin/users/group_email.html',
+                           recipients=students, form=form,
+                           title='Email all students')
+
+
+@admin.route('/staff/profile/edit', methods=['GET', 'POST'])
+@login_required
+def profile():
+    user = User.query.get(current_user.id)
+    form = ProfileForm(obj=user)
+
+    if form.validate_on_submit():
+        user.profile_comment = form.profile_comment.data
+        db.session.commit()
+        flash('Profile updated')
+        return redirect(url_for('admin.dashboard'))
+
+    if form.errors:
+        for field in form.errors:
+            for error in form.errors[field]:
+                flash(error, 'error')
+
+    return render_template('staff/profile/profile.html', user=user, form=form, title="Edit profile")
 
 

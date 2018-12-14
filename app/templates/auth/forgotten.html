@@ -6,7 +6,7 @@
   <div class="center">
     <h1>Request a password reset</h1>
     <br/>
-    {{ wtf.quick_form(form) }}
+    {{ wtf.quick_form(form, extra_classes='clock-form') }}
   </div>
 </div>
 {% block footer %} {{  super() }} {% endblock footer%}

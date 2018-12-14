@@ -14,7 +14,9 @@
                     <div class="col-sm-8">
                         <h1>{{ project.title }}</h1>
                         <p>
-                            {% if project.client.company.web %}
+                            {% if project.client.is_student %}
+                                Student project
+                            {% elif project.client.company.web %}
                                 <a href="{{ project.client.company.web }}" target="blank">{{ project.client.company.name }}</a>
                             {% else %}
                                 {{ project.client.company.name }}
@@ -28,11 +30,11 @@
                             {% endfor %}
                         </p>
                         <h3>Overview</h3>
-                        <pre class="content-text">{{ project.overview }}</pre>
+                        <p class="preserve_newlines">{{ project.overview }}</p>
                         <h3>Deliverables</h3>
-                        <pre class="content-text">{{ project.deliverables }}</pre>
+                        <p class="preserve_newlines">{{ project.deliverables }}</p>
                         <h3>Resources</h3>
-                        <pre class="content-text">{{ project.resources }}</pre>
+                        <p class="preserve_newlines">{{ project.resources }}</p>
                         <h3>Contact details</h3>
                         {% if project.client.display_name_flag or project.client.display_email_flag or project.client.display_phone_flag %}
                             {% if project.client.display_name_flag %}
@@ -52,20 +54,6 @@
                         <h3>Notes of interest</h3>
                         {% if project.notes_of_interest | length == 0 %}
                             <p>No interest yet</p>
-                        {% endif %}
-                        {% if not interest %}
-                            <a href="{{url_for('student.add_interest', id=project.id) }}" class="btn btn-default">Note your interest</a>
-                        {% else %}
-                            {% if team_member != None %}
-                                <a href="{{url_for('student.edit_team', project_id=project.id, id=team_member.team_id) }}" class="btn btn-default">Edit team</a>
-                            {% else %}
-                                <a href="{{url_for('student.create_team', project_id=project.id, id=team_member.team_id) }}" class="btn btn-default">Register team</a>
-                            {% endif %}
-                            {% if flag %}
-                                <a href="{{url_for('student.edit_flag', id=flag.id) }}" class="btn btn-default">Edit flag</a>
-                            {% else %}
-                                <a href="{{url_for('student.set_flag', id=project.id) }}" class="btn btn-default">Set flag</a>
-                            {% endif %}
                         {% endif %}
                         <ul class="interest">
                         {% for note in project.notes_of_interest %}

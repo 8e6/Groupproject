@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask_login import UserMixin
+from sqlalchemy import and_
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash, pbkdf2_hex
 
@@ -25,10 +26,18 @@ class AlertQueue(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     email = db.Column(db.String(60), nullable=False)
-    created_date = db.Column(db.DateTime, nullable=False, index=True)
+    created_date = db.Column(db.DateTime, nullable=False, index=True, default=datetime.now())
     sent_date = db.Column(db.DateTime, index=True)
     subject = db.Column(db.String(120), nullable=False)
     message_text = db.Column(db.Text, nullable=False)
+
+
+class AlertText(db.Model):
+    __tablename__ = 'alert_text'
+
+    code = db.Column(db.String(20), primary_key=True)
+    subject = db.Column(db.String(255))
+    message_text = db.Column(db.Text)
 
 
 class Company(db.Model):
@@ -167,18 +176,6 @@ class Project(db.Model):
     skills_required = db.relationship('SkillRequired', backref='project', lazy='joined', cascade="all, delete", passive_deletes=True)
     teams = db.relationship('Team', backref='project', lazy='select', cascade="all, delete", passive_deletes=True)
 
-    @property
-    def display_overview(self):
-        return "<br />".join(self.overview.split("\n"))
-
-    @property
-    def display_deliverables(self):
-        return "<br />".join(self.deliverables.split("\n"))
-
-    @property
-    def display_resources(self):
-        return "<br />".join(self.resources.split("\n"))
-
     def __repr__(self):
         return '<Project: {}>'.format(self.title)
 
@@ -239,12 +236,9 @@ class Status(db.Model):
     description = db.Column(db.String(120))
     domain_id = db.Column(db.Integer, db.ForeignKey('domain.id'), nullable=False, index=True)
     action_text = db.Column(db.String(10), nullable=False)
-    css_class = db.Column(db.String(10), nullable=False)
     default_for_domain = db.Column(db.Boolean, nullable=False)
     projects = db.relationship('Project', backref='status', lazy='joined')
     teams = db.relationship('Team', backref='status', lazy='joined')
-    # transitions_from = db.relationship('Transition', backref='from_status', lazy='select')
-    # transitions_to = db.relationship('Transition', backref='to_status', lazy='select')
 
     def __repr__(self):
         return '<Status: {}>'.format(self.name)
@@ -287,6 +281,7 @@ class TeamMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     team_id = db.Column(db.Integer, db.ForeignKey('team.id', ondelete='CASCADE'), nullable=False, index=True)
+    project_manager = db.Column(db.Boolean, default=False)
     created_date = db.Column(db.DateTime, default=datetime.now)
 
     def __repr__(self):
@@ -303,7 +298,7 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(60), index=True)
     password_hash = db.Column(db.String(128))
     confirmation_token = db.Column(db.String(120))
-    telephone = db.Column(db.String(60), index=True, unique=True)
+    telephone = db.Column(db.String(60), index=True)
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
     display_name_flag = db.Column(db.Boolean, default=False)
     display_email_flag = db.Column(db.Boolean, default=False)
@@ -312,9 +307,13 @@ class User(UserMixin, db.Model):
     programme_code = db.Column(db.String(10), db.ForeignKey('programme.code'))
     profile_comment = db.Column(db.Text)
     is_admin = db.Column(db.Boolean, default=False)
+    is_staff = db.Column(db.Boolean, default=False)
+    is_student = db.Column(db.Boolean, default=False)
     is_external = db.Column(db.Boolean, default=True)
     notify_new = db.Column(db.Boolean, default=False)
     notify_interest = db.Column(db.Boolean, default=False)
+    login_count = db.Column(db.Integer, default=0)
+    last_login = db.Column(db.DateTime, nullable=True)
     created_date = db.Column(db.DateTime, default=datetime.now)
     online_flag = db.Column(db.Boolean, default=False)
     alerts = db.relationship('AlertQueue', backref='user', lazy='select')
@@ -323,12 +322,6 @@ class User(UserMixin, db.Model):
     skills_offered = db.relationship('SkillOffered', backref='user', lazy='joined')
     flags = db.relationship('Flag', backref='user', lazy='select')
     members = db.relationship('TeamMember', backref='user', lazy='select')
-
-    @property
-    def is_student(self):
-        if 'live.napier.ac.uk' in self.email:
-            return True
-        return False
 
     @staticmethod
     def generate_token(source):

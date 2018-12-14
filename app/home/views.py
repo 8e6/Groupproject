@@ -2,6 +2,7 @@ from flask import abort, render_template, flash, redirect, url_for, current_app
 from flask_login import current_user, login_required
 from flask_mail import Message, Mail
 
+
 from . import home
 from .forms import *
 from app.models import *
@@ -11,45 +12,6 @@ from app.models import *
 def homepage():
     settings = Settings.query.first()
     return render_template('home/index.html', settings=settings, title="Welcome")
-
-
-@home.route('/admin/dashboard')
-@login_required
-def admin_dashboard():
-    # prevent non-admins from accessing the page
-    if not current_user.is_admin:
-        abort(403)
-
-    unconfirmed_companies = User.query.filter(User.company_confirmed == 0).all()
-    logged_in_users = User.query.filter(User.online_flag == True).all()
-    projects = Project.query.order_by(Project.title).all()
-    print(projects)
-    project_domain = Status.query.filter(Domain.name == 'project').first()
-    print(project_domain)
-    status_new = Status.query.filter(Status.domain_id == project_domain.id).first()
-    print(status_new)
-    new_projects = Project.query.filter(Project.status_id == status_new.id).all()
-
-    return render_template('home/admin_dashboard.html',
-                           title="Dashboard",
-                           unconfirmed_companies=unconfirmed_companies,
-                           logged_in_users=logged_in_users,
-                           projects=projects,
-                           new_projects=new_projects
-                           )
-
-
-@home.route('/dashboard')
-@login_required
-def dashboard():
-    projects = Project.query.filter(Project.client_id == current_user.id).all()
-    settings = Settings.query.first()
-    for project in projects:
-        # project.bids = len([t.id for t in project.teams if len(t.members) >= 1 ])
-        project.bids = len([t.id for t in project.teams if len(t.members) >= settings.minimum_team_size ])
-    from_statuses = [p.status_id for p in projects]
-    transitions = Transition.query.filter(Transition.from_status_id.in_(from_statuses), Transition.admin_only == False).all()
-    return render_template('home/dashboard.html', projects=projects, transitions=transitions, title="Dashboard")
 
 
 @home.route('/faq', methods=['GET', 'POST'])
@@ -93,11 +55,11 @@ def contact():
         if current_user.is_authenticated:
             user = User.query.get(current_user.id)
             if user.is_admin:
-                return redirect(url_for('home.admin_dashboard'))
+                return redirect(url_for('admin.dashboard'))
             elif user.is_external:
-                return redirect(url_for('home.dashboard'))
+                return redirect(url_for('client.projects'))
             else:
-                return redirect(url_for('home.dashboard'))
+                return redirect(url_for('client.projects'))
         else:
             return redirect(url_for('home.homepage'))
 
@@ -109,11 +71,11 @@ def privacy():
     if current_user.is_authenticated:
         user = User.query.get(current_user.id)
         if user.is_admin:
-            return_path = 'home.admin_dashboard'
+            return_path = 'admin.dashboard'
         elif user.is_external:
-            return_path = 'home.dashboard'
+            return_path = 'client.projects'
         else:
-            return_path = 'home.dashboard'
+            return_path = 'client.projects'
     else:
         return_path = 'home.index'
 

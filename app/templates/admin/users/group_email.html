@@ -10,8 +10,14 @@
             <h1>{{title}}</h1>
             <br/>
             <p>To:</p>
-            {% for member in members %}
-            <p>{{ member.user.first_name }} {{ member.user.last_name }} ({{ member.user.email }})</p>
+{#            {{ recipients }}#}
+            {% for recipient in recipients %}
+                {% if loop.index < 7 %}
+                    <p>{{ recipient.first_name }} {{ recipient.last_name }} ({{ recipient.email }})</p>
+                {% endif %}
+                {% if loop.index == 7 %}
+                    <p>... (Total: {{ recipients | length }} recipients)</p>
+                {% endif %}
             {% endfor %}
             </p>
             <br/>

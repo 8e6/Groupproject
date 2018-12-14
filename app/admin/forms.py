@@ -11,7 +11,7 @@ from wtforms import StringField, \
                     SelectMultipleField, \
                     RadioField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.validators import DataRequired, Optional, ValidationError, Email
+from wtforms.validators import DataRequired, Optional, ValidationError, Email, Length
 from app.models import Programme, Company
 
 
@@ -24,6 +24,13 @@ class AcademicYearForm(FlaskForm):
     def validate_year(form, field):
         if not re.match('\d\d\d\d-\d\d', field.data):
             raise ValidationError('Please enter the year in the format YYYY-YY')
+
+
+class AlertForm(FlaskForm):
+    code = StringField('Code', validators=[DataRequired()])
+    subject = StringField('Subject', validators=[DataRequired()])
+    message_text = TextAreaField('Text', validators=[DataRequired()])
+    submit = SubmitField('Submit')
 
 
 class DomainForm(FlaskForm):
@@ -46,6 +53,15 @@ class FlagForm(FlaskForm):
     user_id = SelectField('User', coerce=int)
     message = StringField('Message', validators=[DataRequired()])
     submit = SubmitField('Submit')
+
+
+class ProfileForm(FlaskForm):
+    email = StringField('Email', render_kw={'disabled':''}, validators=[DataRequired()])
+    username = StringField('Username', render_kw={'disabled':''}, validators=[DataRequired()])
+    first_name = StringField('First name', render_kw={'disabled':''}, validators=[DataRequired()])
+    last_name = StringField('Last name', render_kw={'disabled':''}, validators=[DataRequired()])
+    profile_comment = TextAreaField('Profile comment')
+    submit = SubmitField('Save')
 
 
 class ProgrammeForm(FlaskForm):
@@ -127,7 +143,6 @@ class StatusForm(FlaskForm):
     description = StringField('Description')
     domain_id = SelectField('Domain', coerce=int)
     action_text = StringField('Action text')
-    css_class = StringField('css class')
     default_for_domain = BooleanField('Default for domain')
     submit = SubmitField('Submit')
 
@@ -163,15 +178,19 @@ class UserForm(FlaskForm):
     last_name = StringField('Last name', validators=[DataRequired()])
     confirmation_token = StringField('Confirmation token', render_kw={'disabled':''})
     telephone = StringField('Telephone')
-    company = StringField('Company')
+    company_id = SelectField('Company', coerce=int)
     company_confirmed = StringField('Confirmed flag', render_kw={'disabled':''})
     programme_code = SelectField('Programme code')
     profile_comment = TextAreaField('Profile comment')
     is_admin = BooleanField('Admin')
     is_external = BooleanField('External')
+    is_staff = BooleanField('Staff')
+    is_student = BooleanField('Student')
     display_name_flag = BooleanField('Display name')
     display_email_flag = BooleanField('Display email')
     display_phone_flag = BooleanField('Display phone')
+    notify_new = BooleanField('Notify new')
+    notify_interest = BooleanField('Notify interest')
     online_flag = BooleanField('Online flag')
     submit = SubmitField('Submit')
 
