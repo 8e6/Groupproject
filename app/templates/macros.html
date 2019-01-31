@@ -69,3 +69,9 @@
         class="btn btn-default">Accept shortlist
     </a>
 {%- endmacro %}
+
+{% macro preview(id) %}
+    <a title="Preview" href="{{ url_for('admin.preview', id=id) }}">
+      <span class="large-icon action-glyph glyphicon glyphicon-zoom-in"></span>
+    </a>
+{% endmacro %}

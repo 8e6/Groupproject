@@ -26,7 +26,7 @@ def projects():
     skills = sorted(Counter(skills).items(), key=lambda x: x[0][0].lower())
 
     companies = []
-    companies += [(p.client.company.name, p.client.company.id) for p in projects]
+    companies += [(p.client.company.name, p.client.company.id) for p in projects if p.client.company_id is not None]
     companies = sorted(Counter(companies).items(), key=lambda x: x[0][0].lower())
     return render_template('staff/projects/projects.html',
                            projects=projects,

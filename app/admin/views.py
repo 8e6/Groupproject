@@ -1440,4 +1440,12 @@ def profile():
 
     return render_template('staff/profile/profile.html', user=user, form=form, title="Edit profile")
 
+@admin.route('/admin/preview/<int:id>', methods=['GET', 'POST'])
+@login_required
+def preview(id):
+    check_admin()
+    team = Team.query.get(id)
 
+    return render_template('admin/teams/preview.html',
+                           team=team,
+                           title='Preview')

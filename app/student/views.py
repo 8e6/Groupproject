@@ -47,7 +47,7 @@ def projects():
     skills = sorted(Counter(skills).items(), key=lambda x: x[0][0].lower())
 
     companies = []
-    companies += [(p.client.company.name, p.client.company.id) for p in projects]
+    companies += [(p.client.company.name, p.client.company.id) for p in projects if p.client.company_id is not None]
     companies = sorted(Counter(companies).items(), key=lambda x: x[0][0].lower())
     return render_template('student/projects/list.html',
                            projects=projects,
@@ -450,7 +450,8 @@ def delete_flag(id):
 @student.route('/vacancies', methods=['GET', 'POST'])
 @login_required
 def vacancies():
-    teams = Team.query.filter(Team.vacancies != '').all()
+    declined = get_status('team', 'Declined')
+    teams = Team.query.filter(and_(Team.vacancies != '', Team.status_id != declined.id)).all()
     return render_template('student/projects/vacancies.html', teams=teams, title="Vacancies")
 
 
