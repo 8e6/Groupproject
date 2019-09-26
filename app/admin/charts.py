@@ -48,30 +48,39 @@ def stats_chart():
 
 
 def projects_chart():
+    year = session['academic_year']
+
     layout = {'height': 150, 'width': 260, 'margin': {'l': 20, 'r': 30, 'b': 50, 't': 10, 'pad': 4},
               'showlegend': False}
 
-    df = pd.read_sql(b"SELECT s.name as Status, count(*) as status_count FROM project p join status s on p.status_id = s.id where s.name = 'New' group by s.name",
+    query  = "SELECT s.name as Status, count(*) as status_count "
+    query += "FROM   project p join status s on p.status_id = s.id "
+    query += "WHERE  s.name = '{}' group by s.name "
+    query += "AND    p.academic_year = '" + year + "'"
+
+    print(bytes(query.format("New"), 'utf8'))
+
+    df = pd.read_sql(bytes(query.format("New"), 'utf8'),
                      db.engine.raw_connection(),
                      index_col='Status')
     graph_data = dict(data=[{'x': df.index, 'y': df['status_count'], 'name': 'New', 'type': 'bar'}], layout=layout)
 
-    df = pd.read_sql(b"SELECT s.name as Status, count(*) as status_count FROM project p join status s on p.status_id = s.id where s.name = 'Relisted' group by s.name",
+    df = pd.read_sql(bytes(query.format("Relisted"), 'utf8'),
                      db.engine.raw_connection(),
                      index_col='Status')
     graph_data['data'].append({'x': df.index, 'y': df['status_count'], 'name': 'Relisted', 'type': 'bar'})
 
-    df = pd.read_sql(b"SELECT s.name as Status, count(*) as status_count FROM project p join status s on p.status_id = s.id where s.name = 'Live' group by s.name",
+    df = pd.read_sql(bytes(query.format("Live"), 'utf8'),
                      db.engine.raw_connection(),
                      index_col='Status')
     graph_data['data'].append({'x': df.index, 'y': df['status_count'], 'name': 'Live', 'type': 'bar'})
 
-    df = pd.read_sql(b"SELECT s.name as Status, count(*) as status_count FROM project p join status s on p.status_id = s.id where s.name = 'Taken' group by s.name",
+    df = pd.read_sql(bytes(query.format("Taken"), 'utf8'),
                      db.engine.raw_connection(),
                      index_col='Status')
     graph_data['data'].append({'x': df.index, 'y': df['status_count'], 'name': 'Taken', 'type': 'bar'})
 
-    df = pd.read_sql(b"SELECT s.name as Status, count(*) as status_count FROM project p join status s on p.status_id = s.id where s.name = 'Complete' group by s.name",
+    df = pd.read_sql(bytes(query.format("Complete"), 'utf8'),
                      db.engine.raw_connection(),
                      index_col='Status')
     graph_data['data'].append({'x': df.index, 'y': df['status_count'], 'name': 'Complete', 'type': 'bar'})
