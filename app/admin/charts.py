@@ -2,6 +2,7 @@ import pandas as pd
 from flask import session
 
 from app import db
+import logging
 import json
 import plotly
 
@@ -55,10 +56,9 @@ def projects_chart():
 
     query  = "SELECT s.name as Status, count(*) as status_count "
     query += "FROM   project p join status s on p.status_id = s.id "
-    query += "WHERE  s.name = '{}' group by s.name "
-    query += "AND    p.academic_year = '" + year + "'"
-
-    print(bytes(query.format("New"), 'utf8'))
+    query += "WHERE  s.name = '{}' "
+    query += "AND    p.academic_year = '" + year + "' "
+    query += "GROUP BY s.name "
 
     df = pd.read_sql(bytes(query.format("New"), 'utf8'),
                      db.engine.raw_connection(),
