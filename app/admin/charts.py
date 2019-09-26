@@ -1,14 +1,22 @@
 import pandas as pd
+from flask import session
+
 from app import db
 import json
 import plotly
 
 
 def stats_chart():
+    year = bytes(session['academic_year'], 'utf8')
+
     layout = {'height': 350, 'width': 800, 'margin': {'l': 40, 'r': 10, 'b': 80, 't': 10, 'pad': 4},
               'legend': {'orientation': "h", 'x': 0.3, 'y': 1.0}}
 
-    df = pd.read_sql(b'SELECT id, project_id, user_id, created_date FROM interest',
+    query  = b"SELECT i.id, p.id, i.user_id, i.created_date "
+    query += b"FROM interest i JOIN project p ON i.project_id = p.id "
+    query += b"WHERE p.academic_year = '" + year + b"'"
+
+    df = pd.read_sql(query,
                      db.engine.raw_connection(),
                      index_col='created_date', parse_dates=True)
     df['count'] = range(1, df.index.size + 1)
@@ -16,13 +24,21 @@ def stats_chart():
         {'x': df.index, 'y': df['count'] / 10, 'name': 'Notes of interest (tens)', 'mode': 'lines', 'type': 'scatter'}],
                       layout=layout)
 
-    df = pd.read_sql(b'SELECT id, project_id, created_by, created_date FROM team',
+    query  = b"SELECT t.id, p.id, t.created_by, t.created_date "
+    query += b"FROM team t JOIN project p ON t.project_id = p.id "
+    query += b"WHERE p.academic_year = '" + year + b"'"
+
+    df = pd.read_sql(query,
                      db.engine.raw_connection(),
                      index_col='created_date', parse_dates=True)
     df['count'] = range(1, df.index.size + 1)
     graph_data['data'].append({'x': df.index, 'y': df['count'], 'name': 'Teams', 'mode': 'lines', 'type': 'scatter'})
 
-    df = pd.read_sql(b'SELECT id, created_date FROM project',
+    query  = b"SELECT id, created_date "
+    query += b"FROM project "
+    query += b"WHERE academic_year = '" + year + b"'"
+
+    df = pd.read_sql(query,
                      db.engine.raw_connection(),
                      index_col='created_date', parse_dates=True)
     df['count'] = range(1, df.index.size + 1)

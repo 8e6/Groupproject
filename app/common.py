@@ -1,4 +1,4 @@
-from flask import abort, flash, redirect, url_for
+from flask import abort, flash, redirect, url_for, session
 from flask_login import current_user, login_required
 from sqlalchemy import and_, or_
 from app.models import *
@@ -53,6 +53,15 @@ def get_bids(project):
 def get_new_teams(project):
     return Team.query.filter(and_(Team.project_id == project.id)).join(Status).\
                       filter(Status.name=='New').all()
+
+
+def get_this_year():
+    return AcademicYear.query.filter(and_(datetime.now() > AcademicYear.start_date, datetime.now() < AcademicYear.end_date)).first()
+
+
+def change_academic_year(year):
+    session['academic_year'] = year
+    return session['academic_year']
 
 
 def delete_notes(user_id, project_id=None):

@@ -17,18 +17,24 @@ logger = logging.getLogger()
 def projects():
     skill = request.args.get("skill")
     company = request.args.get("company")
-    projects = Project.query.order_by((Project.client_id == current_user.id).desc()).order_by(Project.title)
+    projects = Project.query.order_by((Project.client_id == current_user.id).desc()).order_by(Project.academic_year.desc(), Project.title)
+    academic_years = [y.year for y in AcademicYear.query.order_by(text('start_date'))]
+    academic_year = session['academic_year']
+
+    # ToDo: Modify the dropdowns to show the correct values wen the projects are filtered
     skills = []
     bids = {}
     for project in projects:
         bids[project.id] = len(get_bids(project))
-        skills += [(s.skill_required.name, s.skill_required.id) for s in project.skills_required]
+        skills += [(s.skill_required.name, s.skill_required.name) for s in project.skills_required]
     skills = sorted(Counter(skills).items(), key=lambda x: x[0][0].lower())
 
     companies = []
-    companies += [(p.client.company.name, p.client.company.id) for p in projects if p.client.company_id is not None]
+    companies += [(p.client.company.name, p.client.company.name) for p in projects if p.client.company_id is not None]
     companies = sorted(Counter(companies).items(), key=lambda x: x[0][0].lower())
     return render_template('staff/projects/projects.html',
+                           academic_year=academic_year,
+                           academic_years=academic_years,
                            projects=projects,
                            bids=bids,
                            skills=skills,
@@ -50,6 +56,7 @@ def my_projects():
     return render_template('staff/projects/my_projects.html',
                            projects=projects,
                            bids=bids,
+                           academic_year = get_this_year(),
                            transitions=transitions,
                            title="My projects")
 
@@ -64,7 +71,8 @@ def add_project():
     project_domain = Domain.query.filter(Domain.name == 'project').first()
     default_status = Status.query.filter(Status.domain_id == project_domain.id,
                                          Status.default_for_domain == True).first()
-    form.academic_year.choices = [(y.year, y.year) for y in AcademicYear.query.order_by(text('start_date'))]
+    form.academic_year.choices = [(y.year, y.year) for y in AcademicYear.query.filter(AcademicYear.end_date > datetime.now()).order_by(text('start_date'))]
+
     if form.validate_on_submit():
         skills_required = form.skills_required.data
         project = Project(title = form.title.data,
@@ -172,6 +180,33 @@ def edit_project(id):
                            project=project, form=form, title="Edit project")
 
 
+@staff.route('/staff/project/<int:id>/duplicate')
+@login_required
+def duplicate(id):
+    old_project = Project.query.get_or_404(id)
+    check_client(old_project)
+
+    new_project = Project(
+        title = old_project.title,
+        client_id = current_user.id,
+        academic_year = get_this_year().year,
+        overview = old_project.overview,
+        deliverables = old_project.deliverables,
+        resources = old_project.resources,
+        status_id = get_status('project', 'New').id
+    )
+
+    db.session.add(new_project)
+    db.session.commit()
+    db.session.refresh(new_project)
+
+    for skill in old_project.skills_required:
+        db.session.add(SkillRequired(project_id=new_project.id, skill_id=skill.skill_id))
+    db.session.commit()
+
+    return redirect(url_for('staff.my_projects'))
+
+
 #--------  Bid management ----------#
 
 
@@ -268,3 +303,4 @@ def accept_shortlist(id):
     flash('Shortlist accepted')
 
     return redirect(url_for('staff.bids', id=id))
+

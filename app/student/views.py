@@ -33,7 +33,9 @@ def projects():
     accepted_for = [t.project_id for t in Team.query.filter(and_(Team.id.in_(team_ids), Team.status_id == accepted.id))]
     submitted_for = [t.project_id for t in Team.query.filter(and_(Team.id.in_(team_ids), Team.status_id == submitted.id))]
 
-    projects = Project.query.filter(or_(Project.status_id.in_(statuses), Project.client_id == current_user.id)).\
+    projects = Project.query.filter(and_(Project.academic_year == session['academic_year'],
+                                         or_(Project.status_id.in_(statuses),
+                                             Project.client_id == current_user.id))).\
         order_by((Project.client_id == current_user.id).desc()).\
         order_by(Project.title)
 
@@ -43,11 +45,11 @@ def projects():
     bids = {}
     for project in projects:
         bids[project.id] = len(get_bids(project))
-        skills += [(s.skill_required.name, s.skill_required.id) for s in project.skills_required]
+        skills += [(s.skill_required.name, s.skill_required.name) for s in project.skills_required]
     skills = sorted(Counter(skills).items(), key=lambda x: x[0][0].lower())
 
     companies = []
-    companies += [(p.client.company.name, p.client.company.id) for p in projects if p.client.company_id is not None]
+    companies += [(p.client.company.name, p.client.company.name) for p in projects if p.client.company_id is not None]
     companies = sorted(Counter(companies).items(), key=lambda x: x[0][0].lower())
     return render_template('student/projects/list.html',
                            projects=projects,
@@ -118,7 +120,8 @@ def add_project():
     project_domain = Domain.query.filter(Domain.name == 'project').first()
     default_status = Status.query.filter(Status.domain_id == project_domain.id,
                                          Status.default_for_domain == True).first()
-    form.academic_year.choices = [(y.year, y.year) for y in AcademicYear.query.order_by(text('start_date'))]
+    form.academic_year.choices = [(y.year, y.year) for y in AcademicYear.query.filter(AcademicYear.end_date > datetime.now()).order_by(text('start_date'))]
+
     if form.validate_on_submit():
         skills_required = form.skills_required.data
         project = Project(title = form.title.data,

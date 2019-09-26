@@ -7,82 +7,88 @@
     <div class="outer">
         <div class="middle">
             <div class="inner">
-            <div class="center">
-                <br/>
-                {% if projects %}
-                    <div class="card">
-                        <div class="card-header">
-                        <ul class="nav nav-tabs card-header-tabs">
-                        {% for project in projects %}
-                              <li class="nav-item">
-                                <a class="nav-link active" id="{{ project.id }}-tab" data-toggle="tab" href="#{{ project.id }}"
-                                   role="tab" aria-controls="home" aria-selected="true" aria-expanded="true">Project {{ loop.index }}</a>
-                              </li>
-                        {% endfor %}
-                        </ul>
-                        </div>
-                        <div class="card-body">
-                            <div class="tab-content" id="myTabContent">
-                                {% for project in projects %}
-                                    {% if loop.first %}
-                                        <div class="tab-pane fade active in" id="{{project.id}}" role="tabpanel" aria-labelledby="{{project.id}}-tab">
-                                    {% else %}
-                                        <div class="tab-pane fade" id="{{project.id}}" role="tabpanel" aria-labelledby="{{project.id}}-tab">
-                                    {% endif %}
-
-                                        <h4>{{ project.title }}</h4>
-                                        <p class="info-text">Academic year: {{ project.academic_year }}      Created: {{ project.created_date }}</p>
-                                        <p><span class="badge {{ project.status.name }}">{{ project.status.name }}</span>: {{ project.status.description }}</p>
-                                        <h5>Overview </h5>
-                                        <p class="preserve_newlines">{{ project.overview }}</p>
-                                        <h5>Deliverables </h5>
-                                        <p class="preserve_newlines">{{ project.deliverables }}</p>
-                                        <h5>Resources </h5>
-                                        <p class="preserve_newlines">{{ project.resources }}</p>
-                                        <h5>Skills required </h5>
-                                            {% for skill in project.skills_required %}
-                                                {{ skill.skill_required.name }}<br/>
-                                            {%  endfor %}
-
-                                        <br/><br/>
-
-                                        {% if project.status.name != 'Complete' %}
-                                            {% if bids[project.id] > 0 %}
-                                                <a href="{{ url_for('staff.bids', id=project.id) }}" class="btn btn-default">
-                                                    {% if project.status.name == 'Taken' %}
-                                                        {% if bids[project.id] > 1 %}
-                                                            Teams
-                                                        {% else %}
-                                                            Team
-                                                        {% endif %}
-                                                    {% else %}
-                                                        Bids <span class="badge badge-info">{{ bids[project.id] }}</span>
-                                                    {% endif %}
-                                                </a>
-                                            {% else %}
-                                                <button type="button" class="btn btn-default disabled">
-                                                    Bids</span>
-                                                </button>
-                                            {% endif %}
-                                            <a href="{{url_for('staff.edit_project', id=project.id) }}" class="btn btn-default">Edit</a>
+                <div class="center">
+                    <br/>
+                    {% if projects %}
+                        <div class="card">
+                            <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs">
+                            {% for project in projects %}
+                                  <li class="nav-item">
+                                    <a class="nav-link active" id="{{ project.id }}-tab" data-toggle="tab" href="#{{ project.id }}"
+                                       role="tab" aria-controls="home" aria-selected="true" aria-expanded="true">Project {{ loop.index }}</a>
+                                  </li>
+                            {% endfor %}
+                            </ul>
+                            </div>
+                            <div class="card-body">
+                                <div class="tab-content" id="myTabContent">
+                                    {% for project in projects %}
+                                        {% if loop.first %}
+                                            <div class="tab-pane fade active in" id="{{project.id}}" role="tabpanel" aria-labelledby="{{project.id}}-tab">
+                                        {% else %}
+                                            <div class="tab-pane fade" id="{{project.id}}" role="tabpanel" aria-labelledby="{{project.id}}-tab">
                                         {% endif %}
-                                        {% for transition in transitions %}
-                                            {% if transition.from_status_id == project.status_id %}
-                                                {{ m.status('project', 'staff.bid_transition', project.id, transition)}}
+
+                                            <h4>{{ project.title }}</h4>
+                                            <p class="info-text">Academic year: {{ project.academic_year }}      Created: {{ project.created_date }}</p>
+                                            <p><span class="badge {{ project.status.name }}">{{ project.status.name }}</span>: {{ project.status.description }}</p>
+                                            <h5>Overview </h5>
+                                            <p class="preserve_newlines">{{ project.overview }}</p>
+                                            <h5>Deliverables </h5>
+                                            <p class="preserve_newlines">{{ project.deliverables }}</p>
+                                            <h5>Resources </h5>
+                                            <p class="preserve_newlines">{{ project.resources }}</p>
+                                            <h5>Skills required </h5>
+                                                {% for skill in project.skills_required %}
+                                                    {{ skill.skill_required.name }}<br/>
+                                                {%  endfor %}
+
+                                            <br/><br/>
+
+                                            {% if project.status.name != 'Complete' %}
+                                                {% if bids[project.id] > 0 %}
+                                                    <a href="{{ url_for('staff.bids', id=project.id) }}" class="btn btn-default">
+                                                        {% if project.status.name == 'Taken' %}
+                                                            {% if bids[project.id] > 1 %}
+                                                                Teams
+                                                            {% else %}
+                                                                Team
+                                                            {% endif %}
+                                                        {% else %}
+                                                            Bids <span class="badge badge-info">{{ bids[project.id] }}</span>
+                                                        {% endif %}
+                                                    </a>
+                                                {% else %}
+                                                    <button type="button" class="btn btn-default disabled">
+                                                        Bids</span>
+                                                    </button>
+                                                {% endif %}
+                                                <a href="{{url_for('staff.edit_project', id=project.id) }}" class="btn btn-default">Edit</a>
                                             {% endif %}
-                                        {% endfor %}
+                                            {% for transition in transitions %}
+                                                {% if transition.from_status_id == project.status_id %}
+                                                    {{ m.status('project', 'staff.bid_transition', project.id, transition)}}
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if project.status.name == 'Old' %}
+                                                <a href="{{ url_for('staff.duplicate', id=project.id) }}" class="btn btn-default">
+                                                    Copy for {{ academic_year.year }}
+                                                </a>
+                                            {% endif %}
+                                    </div>
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
                             </div>
                         </div>
+                    {% else %}
+                      <div style="text-align: center">
+                        <h4> You have no projects yet.<br/><br/>You can add a new one using the 'New Project' link in the menu. </h4>
+                        <hr class="intro-divider">
+                    {% endif %}
                     </div>
-                {% else %}
-                  <div style="text-align: center">
-                    <h4> You have no projects yet.<br/><br/>You can add a new one using the 'New Project' link in the menu. </h4>
-                    <hr class="intro-divider">
-                {% endif %}
                 </div>
-            </div>
+                </div>
             </div>
         </div>
     </div>

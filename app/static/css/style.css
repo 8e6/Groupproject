@@ -54,8 +54,8 @@ p.copyright {
     color: #ffffff;
 }
 
-button .badge {
-    margin-left: 10px;
+.badge {
+    margin-right: 10px;
 }
 
 .btn-default .badge {
@@ -68,6 +68,10 @@ button .badge {
     width: 50%;
     padding: 10px;
 }
+
+#change_academic_year {width: fit-content;}
+/*#change_academic_year_submit {position: absolute; top: -20px;}*/
+#change_academic_year_submit {display: none;}
 
 .content-section {
     padding: 90px 0px 0px 0px;
@@ -287,14 +291,6 @@ form #admin_notes {
     margin-bottom: 10px;
 }
 
-.card {
-    background-color: white;
-}
-
-.card-body {
-    padding: 20px;
-}
-
 #email-address {
     outline: none;
     border: none;
@@ -323,12 +319,10 @@ form #admin_notes {
     padding: 0 5px 0 5px;
 }
 
+.hidden {display: none;}
+
 .inset-chart {
     float: right;
-}
-
-.card-body .modebar {
-      display: none !important;
 }
 
 .interest li {
@@ -367,9 +361,51 @@ form #admin_notes {
     white-space: pre-wrap;
 }
 
+/*Cards*/
+
+.card-deck {
+  display: flex;
+  justify-content: space-around;
+  flex-flow: row wrap;
+  align-items: stretch;
+}
+
+.card {
+    margin: 10px;
+    background-color: white;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.card-inner {
+    height: 100%;
+    position: relative;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-body .modebar {
+      display: none !important;
+}
+
+.card-footer {
+    background-color: #fefefe;
+    padding: 5px;
+    flex-grow: 10;
+    display: flex;
+    align-content: flex-end;
+    flex-flow: wrap;
+}
+
 .projects .card {
     border: 1px solid lightgray;
     margin-bottom: 20px;
+    min-width: 300px;
+    max-width: 30%;
 }
 
 .projects a .card-body:hover {
@@ -401,9 +437,8 @@ form #admin_notes {
     padding: 5px;
 }
 
-.projects .card-footer {
-    background-color: #fefefe;
-    padding: 5px;
+.projects .not-current .card-header{
+    color: slategray;
 }
 
 .projects .card-body {
@@ -489,10 +524,7 @@ form #admin_notes {
     clear: both;
 }
 
-#skill-filter {
-    margin: 0px 20px 20px 0px;
-}
-#company-filter {
+#year-filter, #skill-filter, #company-filter {
     margin: 0px 20px 20px 0px;
 }
 

@@ -1,4 +1,4 @@
-from flask import flash, redirect, render_template, url_for, current_app, abort, Flask
+from flask import flash, redirect, render_template, url_for, current_app, abort, Flask, session
 from flask_login import login_required, login_user, logout_user, current_user
 from flask_mail import Message, Mail
 from datetime import datetime
@@ -7,6 +7,7 @@ from . import auth
 from .forms import *
 from .. import db
 from app.models import User, Company
+from app.common import get_this_year
 import logging
 
 @auth.route('/register', methods=['GET', 'POST'])
@@ -99,6 +100,8 @@ def login():
             db.session.commit()
             logging.info('{} {} logged in at {}'.format(user.first_name, user.last_name, datetime.now().strftime('%y-%m-%d %H:%M')))
 
+            session['academic_year'] = get_this_year().year
+
             if user.is_admin:
                 return redirect(url_for('admin.dashboard'))
             elif user.is_external:
@@ -119,6 +122,7 @@ def login():
 @login_required
 def logout():
     user = User.query.get(current_user.id)
+    session.clear()
     logout_user()
     flash('You have successfully been logged out.')
 

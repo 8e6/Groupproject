@@ -1,3 +1,4 @@
+{% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
 {% import 'macros.html' as m %}
 {% block title %}{{title}}{% endblock %}
@@ -8,6 +9,9 @@
             <div class="inner">
                 <div class="wide-table dashboard row">
                     <div id='left' class='column'>
+                        <div>
+                            {{ wtf.quick_form(form) }}
+                        </div>
                         <div class="email-link">
                             <a title='Email all students' href="{{url_for('admin.students_email', return_url='admin.dashboard')}}">
                                  <span class="action-glyph glyphicon glyphicon-envelope"></span>Email all students

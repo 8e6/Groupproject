@@ -145,6 +145,7 @@ def projects():
     transitions = Transition.query.filter(Transition.from_status_id.in_(from_statuses), Transition.admin_only == False).all()
     return render_template('client/projects/projects.html',
                            projects=projects,
+                           academic_year=get_this_year(),
                            bids=bids,
                            new=new,
                            transitions=transitions,
@@ -161,7 +162,8 @@ def add_project():
     project_domain = Domain.query.filter(Domain.name == 'project').first()
     default_status = Status.query.filter(Status.domain_id == project_domain.id,
                                          Status.default_for_domain == True).first()
-    form.academic_year.choices = [(y.year, y.year) for y in AcademicYear.query.order_by(text('start_date'))]
+    form.academic_year.choices = [(y.year, y.year) for y in AcademicYear.query.filter(AcademicYear.end_date > datetime.now()).order_by(text('start_date'))]
+
     if form.validate_on_submit():
         skills_required = form.skills_required.data
         project = Project(title = form.title.data,
@@ -245,6 +247,7 @@ def delete_project(id):
 
     return redirect(url_for('client.projects'))
 
+
 @client.route('/projects/transition/<int:id>/<int:status_id>', methods=['GET', 'POST'])
 @login_required
 def transition(id, status_id):
@@ -271,6 +274,33 @@ def transition(id, status_id):
 
     db.session.commit()
     flash('The project is now ' + status.name)
+
+    return redirect(url_for('client.projects'))
+
+
+@client.route('/staff/project/<int:id>/duplicate')
+@login_required
+def duplicate(id):
+    old_project = Project.query.get_or_404(id)
+    check_client(old_project)
+
+    new_project = Project(
+        title = old_project.title,
+        client_id = current_user.id,
+        academic_year = get_this_year().year,
+        overview = old_project.overview,
+        deliverables = old_project.deliverables,
+        resources = old_project.resources,
+        status_id = get_status('project', 'New').id
+    )
+
+    db.session.add(new_project)
+    db.session.commit()
+    db.session.refresh(new_project)
+
+    for skill in old_project.skills_required:
+        db.session.add(SkillRequired(project_id=new_project.id, skill_id=skill.skill_id))
+    db.session.commit()
 
     return redirect(url_for('client.projects'))
 

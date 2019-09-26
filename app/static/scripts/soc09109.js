@@ -1,3 +1,9 @@
+$(function() {
+  if ( $( "#year-filter" ).length ) {
+      filter_projects();
+}
+});
+
 $(function () {
     $('[data-toggle="popover"]').popover();
 });
@@ -6,21 +12,43 @@ $('.clock-form').submit(function() {
     $('.overlay').show();
 });
 
-$("#skill-filter").on("change", function() {
-    var value = $("#skill-filter option:selected").text();
-    value = value.substr(0, value.indexOf('(')-1);
-    $(".card").filter(function() {
-      $(this).toggle($(this).text().toLowerCase().replace(/(\r\n|\n|\r)/gm,"").indexOf(value.toLowerCase()) > -1)
-    });
+$("#change_academic_year").on("change", function() {
+    $("#change_academic_year_submit").click();
 });
 
-$("#company-filter").on("change", function() {
-    var value = $("#company-filter option:selected").text();
-    value = value.substr(0, value.indexOf('(')-1);
-    $(".card").filter(function() {
-      $(this).toggle($(this).text().toLowerCase().replace(/(\r\n|\n|\r)/gm,"").indexOf(value.toLowerCase()) > -1)
-    });
-});
+$("#year-filter").on("change", filter_projects);
+$("#skill-filter").on("change", filter_projects);
+$("#company-filter").on("change", filter_projects);
+
+function filter_projects() {
+    $('.card').removeClass('hidden');
+    var skill = $("#skill-filter").val();
+    var company = $("#company-filter").val();
+    if ( $( "#year-filter" ).length ) {
+        var year = $("#year-filter option:selected").text();
+    }
+
+    selector = "NONE";
+
+    if (skill == "0") {
+        if (company != "0") {
+            selector = '.card-body:not(:contains("' + company + '"))'
+        }
+    }
+    else {
+        if (company == "0") {
+            selector = '.card-body:not(:contains("' + skill + '"))'
+        }
+        else {
+            selector = '.card-body:not(:contains("' + skill + '")), .card-body:not(:contains("' + company + '"))'
+        }
+    }
+
+    if ( $( "#year-filter" ).length ) {
+        $('.card-deck').find('.card:not(.' + year + ')').addClass('hidden');
+    }
+    $('.card-deck').find(selector).parent().parent().addClass('hidden');
+}
 
 $(".project_status_select").on("change", function() {
     str = String(location);

@@ -33,6 +33,11 @@ class AlertForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
+class ChangeAcademicYearForm(FlaskForm):
+    change_academic_year = SelectField('Academic year')
+    submit = SubmitField('Submit', id='change_academic_year_submit')
+
+
 class DomainForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     description = StringField('Description', validators=[DataRequired()])

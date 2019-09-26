@@ -1,6 +1,7 @@
 from flask import abort, flash, redirect, render_template, url_for, current_app, request
 from flask_login import current_user, login_required
 from flask_mail import Message, Mail
+from sqlalchemy import desc
 from sqlalchemy.sql import text, func
 from datetime import timedelta
 
@@ -12,6 +13,7 @@ from . import admin
 from .forms import *
 from app import scheduler
 from app.models import *
+from app.common import get_this_year, change_academic_year
 from app.scheduled_jobs import Jobs
 from .charts import *
 
@@ -22,21 +24,37 @@ def check_admin():
         abort(403)
 
 
-@admin.route('/admin/dashboard')
+@admin.route('/admin/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
     # prevent non-admins from accessing the page
     if not current_user.is_admin:
         abort(403)
 
+    form = ChangeAcademicYearForm()
+    form.change_academic_year.choices = [(y.year, y.year) for y in AcademicYear.query.order_by(text('start_date'))]
+
+    if form.validate_on_submit():
+        try:
+            change_academic_year(form.change_academic_year.data)
+        except:
+            flash('Could not change academic year')
+
+    academic_year = session['academic_year']
+
+    form.change_academic_year.data = session['academic_year']
+
     unconfirmed_companies = User.query.filter(User.company_confirmed == 0).all()
-    projects = Project.query.order_by(Project.title).all()
+    projects = Project.query.filter(Project.academic_year == academic_year).order_by(Project.title).all()
     project_domain = Status.query.filter(Domain.name == 'project').first()
     status_new = Status.query.filter(Status.domain_id == project_domain.id).first()
-    new_projects = Project.query.filter(Project.status_id == status_new.id).all()
+    new_projects = Project.query.filter(and_(Project.status_id == status_new.id, Project.academic_year == academic_year)).all()
+    years = AcademicYear.query.order_by(desc(AcademicYear.start_date)).all()
 
     one_hour_ago = datetime.now() - timedelta(hours=1)
     midnight = datetime.now().date()
+
+    # ToDo: Add facility to clear login history
     logins = db.session.query(func.sum(User.login_count).label('sum')).first()
     logins_today = db.session.query(func.count(User.login_count).label('count')).filter(User.last_login > midnight).first()
     logins_this_hour = db.session.query(func.count(User.login_count).label('count')).filter(User.last_login > one_hour_ago).first()
@@ -58,6 +76,9 @@ def dashboard():
                            logins_today=logins_today,
                            logins_this_hour=logins_this_hour,
                            projects=projects,
+                           years=years,
+                           academic_year=academic_year,
+                           form=form,
                            new_projects=new_projects,
                            chart_JSON=chart_JSON,
                            chart_metadata=chart_metadata
@@ -1449,3 +1470,5 @@ def preview(id):
     return render_template('admin/teams/preview.html',
                            team=team,
                            title='Preview')
+
+# ToDo: Add function to archive old projects - ie. change status of live, relisted, taken, protected, new to old for all projects not in the current academic year
