@@ -94,7 +94,7 @@
                                                 {{ m.status('project', 'client.transition', project.id, transition)}}
                                             {% endif %}
                                         {% endfor %}
-                                        {% if project.status.name == 'Old' %}
+                                        {% if project.status.name == 'Old' or project.status.name == 'Withdrawn' %}
                                             <a href="{{ url_for('client.duplicate', id=project.id) }}" class="btn btn-default">
                                                 Copy for {{ academic_year.year }}
                                             </a>
@@ -106,9 +106,8 @@
                         </div>
                     </div>
                 {% else %}
-                  <div style="text-align: center">
-                    <h4> You have no projects yet.<br/><br/>You can add a new one using the link in the menu bar. </h4>
-                    <hr class="intro-divider">
+                  <div>
+                    {% include 'client/projects/new_client.html' %}
                 {% endif %}
                 </div>
             </div>

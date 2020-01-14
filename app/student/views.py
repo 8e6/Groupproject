@@ -6,6 +6,9 @@ from sqlalchemy import and_, or_, text
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import case
 
+from jinja2 import Markup
+import re
+
 from . import student
 from .forms import *
 from app.models import *
@@ -72,7 +75,16 @@ def profile():
     form.skills_offered.data = [s.skill_id for s in user.skills_offered]
 
     if form.validate_on_submit():
-        user.profile_comment = form.profile_comment.data
+        # Check for javascript injection
+        script_pattern = "<\s*script.*>.*<\s*\/\s*script.*>"
+        pattern = ".*" + script_pattern
+        string_match = re.match(pattern, form.profile_comment.data)
+        if string_match:
+            user.profile_comment = re.sub(script_pattern, "- SCRIPT REMOVED -", form.profile_comment.data)
+            message = user.first_name + " " + user.last_name + " attempted to place a script into their profile"
+            security_alert(message)
+        else:
+            user.profile_comment = form.profile_comment.data
         user.notify_new = form.notify_new.data
         user.notify_interest = form.notify_interest.data
         SkillOffered.query.filter(SkillOffered.user_id==current_user.id).delete()
@@ -94,6 +106,7 @@ def profile():
 @student.route('/project/<int:id>')
 @login_required
 def project(id):
+    parser = MyHTMLParser()
     project = Project.query.get(id)
     interest = Interest.query.filter(and_(Interest.project_id == id, Interest.user_id == current_user.id)).first()
     flag = Flag.query.filter(and_(Flag.project_id == id, Flag.user_id == current_user.id)).first()
@@ -101,6 +114,12 @@ def project(id):
     team_member = TeamMember.query.filter(and_(TeamMember.user_id == current_user.id,
                                                TeamMember.team_id.in_([t.id for t in teams]))).first()
     transitions = Transition.query.filter(Transition.from_status_id == project.status_id, Transition.admin_only == False).all()
+
+    for n in project.notes_of_interest:
+        parser.init()
+        if n.user.profile_comment:
+            parser.feed(n.user.profile_comment)
+            n.user.profile_comment = parser.outstring
     return render_template('student/projects/project.html',
                            project=project,
                            interest=interest,
@@ -390,11 +409,14 @@ def preview(id):
 def set_flag(id):
     form = FlagForm()
     add_flag = True
+    parser = MyHTMLParser()
 
     if form.validate_on_submit():
+        parser.init()
+        parser.feed(form.message.data)
         flag = Flag(user_id = current_user.id,
                     project_id = id,
-                    message = form.message.data)
+                    message = parser.outstring)
         try:
             db.session.add(flag)
             db.session.commit()

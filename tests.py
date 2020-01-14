@@ -6,6 +6,8 @@ from app.models import Programme, Company
 from app import create_app, db
 from app.models import User
 
+from app import common
+
 
 class TestBase(TestCase):
 
@@ -135,6 +137,15 @@ class TestErrorPages(TestBase):
         response = self.client.get('/500')
         self.assertEqual(response.status_code, 500)
         self.assertTrue(b"500 Error" in response.data)
+
+
+class TestOther(TestBase):
+
+    def test_sanitise(self):
+        text = "HTML with <script> tags, \"quotes\" & \'apostrophes\' and forward/slashes"
+        text2 = "HTML with &lt;script&gt; tags, &quot;quotes&quot; &amp; &#x27;apostrophes&#x27; and forward&#x2F;slashes"
+        self.assertEqual(common.sanitise(text), text2)
+
 
 if __name__ == '__main__':
     unittest.main()

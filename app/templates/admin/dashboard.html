@@ -19,7 +19,13 @@
                         </div>
                         <br><br>
                         <div class="email-link">
-                            <a title='Email all students' href="{{ url_for('staff.projects') }}">
+                            <a title='Email all clients' href="{{url_for('admin.clients_email', return_url='admin.dashboard')}}">
+                                 <span class="action-glyph glyphicon glyphicon-envelope"></span>Email all clients
+                            </a>
+                        </div>
+                        <br><br>
+                        <div class="email-link">
+                            <a title='Projects grid view' href="{{ url_for('staff.projects') }}">
                                  <span class="action-glyph glyphicon glyphicon-th"></span>Projects grid view
                             </a>
                         </div>

@@ -84,7 +84,8 @@ def company():
         company.address = form.address.data
         company.city = form.city.data
         company.post_code = form.post_code.data
-        company.web = form.web.data
+        if len(form.web.data) > 0:
+            company.web = form.web.data                             # Avoids duplicate index values where the user has entered an empty string
         company.health_policy_flag = form.health_policy_flag.data
         company.health_policy_link = form.health_policy_link.data
         company.training_policy_flag = form.training_policy_flag.data

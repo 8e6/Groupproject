@@ -16,6 +16,7 @@ def stats_chart():
     query  = b"SELECT i.id, p.id, i.user_id, i.created_date "
     query += b"FROM interest i JOIN project p ON i.project_id = p.id "
     query += b"WHERE p.academic_year = '" + year + b"'"
+    query += b"ORDER BY i.created_date"
 
     df = pd.read_sql(query,
                      db.engine.raw_connection(),

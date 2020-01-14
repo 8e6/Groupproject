@@ -13,7 +13,7 @@ from . import admin
 from .forms import *
 from app import scheduler
 from app.models import *
-from app.common import get_this_year, change_academic_year
+from app.common import get_this_year, change_academic_year, sanitise
 from app.scheduled_jobs import Jobs
 from .charts import *
 
@@ -51,10 +51,12 @@ def dashboard():
     new_projects = Project.query.filter(and_(Project.status_id == status_new.id, Project.academic_year == academic_year)).all()
     years = AcademicYear.query.order_by(desc(AcademicYear.start_date)).all()
 
+    this_year = get_this_year().start_date
     one_hour_ago = datetime.now() - timedelta(hours=1)
     midnight = datetime.now().date()
 
     # ToDo: Add facility to clear login history
+    # ToDo: Only show logins this academic year
     logins = db.session.query(func.sum(User.login_count).label('sum')).first()
     logins_today = db.session.query(func.count(User.login_count).label('count')).filter(User.last_login > midnight).first()
     logins_this_hour = db.session.query(func.count(User.login_count).label('count')).filter(User.last_login > one_hour_ago).first()
@@ -103,7 +105,9 @@ def add_academic_year():
 
     form = AcademicYearForm()
     if form.validate_on_submit():
-        academic_year = AcademicYear(year=form.year.data, start_date=form.start_date.data, end_date=form.end_date.data)
+        academic_year = AcademicYear(year=sanitise(form.year.data),
+                                     start_date=form.start_date.data,
+                                     end_date=form.end_date.data)
         try:
             db.session.add(academic_year)
             db.session.commit()
@@ -702,7 +706,7 @@ def delete_flag(id):
 @login_required
 def list_projects():
     check_admin()
-    projects = Project.query.all()
+    projects = Project.query.filter(Project.academic_year == session['academic_year']).all()
     domain = Domain.query.filter(Domain.name == 'project').first()
     statuses = Status.query.filter(Status.domain_id == domain.id).all()
     transitions = Transition.query.filter(Transition.to_status_id.in_([s.id for s in statuses])).all()
@@ -1440,6 +1444,41 @@ def students_email(return_url):
     return render_template('admin/users/group_email.html',
                            recipients=students, form=form,
                            title='Email all students')
+
+
+@admin.route('/clients_email/<return_url>', methods=['GET', 'POST'])
+@login_required
+def clients_email(return_url):
+    check_admin()
+    this_year = get_this_year()
+
+    projects = Project.query.filter(Project.academic_year == this_year.year).order_by(Project.client_id).all()
+    if len(projects):
+        clients = [projects[0].client]
+        for p in projects:
+            if p.client_id != clients[-1].id:
+                clients.append(p.client)
+
+        form = EmailForm()
+        if form.validate_on_submit():
+            msg = Message(subject=form.subject.data,
+                          body=form.message.data,
+                          sender=current_user.email,
+                          recipients=[current_user.email],
+                          bcc=[u.email for u in clients])
+            mail = Mail(current_app)
+            mail.send(msg)
+
+            flash('Email sent')
+
+            return redirect(url_for(return_url))
+
+        return render_template('admin/users/group_email.html',
+                               recipients=clients, form=form,
+                               title='Email all clients')
+    else:
+        flash('No projects found for ' + this_year.year)
+        return redirect(url_for(return_url))
 
 
 @admin.route('/staff/profile/edit', methods=['GET', 'POST'])

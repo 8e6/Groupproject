@@ -185,6 +185,7 @@ def forgotten():
 
             flash('Please check your email inbox')
         except:
+            logging.info('Password reset: {} not recognised at {}'.format(form.email.data, datetime.now().strftime('%y-%m-%d %H:%M')))
             flash('Email not recognised', 'error')
 
     return render_template('auth/forgotten.html', form=form, title='Request password reset')
