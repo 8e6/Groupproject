@@ -16,6 +16,6 @@ The users of the application will mainly fall into 3 categories of Students, Fac
 
 
 ### Features
-####Produce an individual user profile
+#### Produce an individual user profile
 The application will allow .......
 
