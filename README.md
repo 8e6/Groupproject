@@ -1,4 +1,4 @@
-##Web application for managing student projects
+## Web application for managing student projects
 
 # Vision Statement
 ## Purpose
